@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+  	"start": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/imperatormk/moj-psiholog-server/issues"
   },
-  "homepage": "https://github.com/imperatormk/moj-psiholog-server#readme"
+  "homepage": "https://github.com/imperatormk/moj-psiholog-server#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3"
+  }
 }
