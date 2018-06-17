@@ -1,9 +1,10 @@
 const express = require('express')
 const cors = require('cors')
 const app = express()
-var fs = require('fs')
-var https = require('https')
-var router = express.Router()
+const socketClusterServer = require('socketcluster-server')
+const fs = require('fs')
+const https = require('https')
+const router = express.Router()
 
 const apiKey = '46139462' // move from here
 
@@ -17,7 +18,13 @@ app.use(bodyParser.json())
 
 app.use(cors())
 
-app.get('/api/tokens', function(req, res) {
+app.get('/', (req, res) => {
+  res.json({
+    sane: 'true'
+  })
+})
+
+app.get('/api/tokens', (req, res) => {
   opentok.createSession((err, session) => {
     if (err) return console.log(err)
   
@@ -32,10 +39,17 @@ app.get('/api/tokens', function(req, res) {
   })
 })
 
-https.createServer({
+const httpsServer = https.createServer({
   key: fs.readFileSync('./certs/server.key'),
   cert: fs.readFileSync('./certs/server.cert')
 }, app)
-.listen(3002, function () {
+
+const scServer = socketClusterServer.attach(httpsServer)
+
+scServer.on('connection', (socket) => {
+  console.log('new connection')
+})
+
+httpsServer.listen(3002, () => {
   console.log('Example app listening on port 3002! Go to https://localhost:3002/')
 })
