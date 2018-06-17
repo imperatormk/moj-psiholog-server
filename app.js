@@ -44,7 +44,14 @@ const httpsServer = https.createServer({
   cert: fs.readFileSync('./certs/server.cert')
 }, app)
 
-const scServer = socketClusterServer.attach(httpsServer)
+const scServer = socketClusterServer.attach(httpsServer, {
+  protocol: 'https',
+  protocolOptions: {
+    key: fs.readFileSync('./certs/server.key'),
+    cert: fs.readFileSync('./certs/server.cert'),
+    passphrase: ''
+  },
+})
 
 scServer.on('connection', (socket) => {
   console.log('new connection')
