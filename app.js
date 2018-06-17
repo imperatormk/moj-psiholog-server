@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const socketClusterServer = require('socketcluster-server')
+const nodemailer = require("nodemailer")
 const fs = require('fs')
 const https = require('https')
 const router = express.Router()
@@ -36,6 +37,40 @@ app.get('/api/tokens', (req, res) => {
       sessionId,
       token
     })
+  })
+})
+
+var smtpTransport = nodemailer.createTransport({
+  host: 'smtp.live.com',
+  port: 587,
+  service: "Hotmail",
+  secureConnection: true,
+  secure: true,
+  auth: {
+    user: 'windows_ntuser@hotmail.com',
+    pass: 'hoho!'
+  },
+  tls: {
+    rejectUnauthorized: false,
+    ciphers: "starttls"
+  }
+})
+
+var mailOptions = {
+  from: 'Darko Simonovski <windows_ntuser@hotmail.com>',
+  to: 'darko.simonovski@hotmail.com',
+  subject: 'Lorem ipsum - Lorem ipsum',
+  html:
+      'XXX: <br><br> HHH'
+}
+
+app.get('/email', (req, res) => {
+  smtpTransport.sendMail(mailOptions, function(error, response) {
+    if (error) {
+      res.send("Email could not sent due to error: " + error)
+    } else {
+      res.send("Requerimiento enviado con éxito")
+    } 
   })
 })
 
