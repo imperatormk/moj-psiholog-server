@@ -1,7 +1,8 @@
 const express = require('express')
 const cors = require('cors')
 const app = express()
-var http = require('http').Server(app)
+var fs = require('fs')
+var https = require('https')
 var router = express.Router()
 
 const apiKey = '46139462' // move from here
@@ -16,7 +17,7 @@ app.use(bodyParser.json())
 
 app.use(cors())
 
-app.get('/session', function(req, res) {
+app.get('/api/tokens', function(req, res) {
   opentok.createSession((err, session) => {
     if (err) return console.log(err)
   
@@ -31,4 +32,10 @@ app.get('/session', function(req, res) {
   })
 })
 
-http.listen(3002, () => console.log('App listening on port 3002!'))
+https.createServer({
+  key: fs.readFileSync('./certs/server.key'),
+  cert: fs.readFileSync('./certs/server.cert')
+}, app)
+.listen(3002, function () {
+  console.log('Example app listening on port 3002! Go to https://localhost:3002/')
+})
