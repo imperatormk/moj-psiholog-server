@@ -6,9 +6,12 @@ const router = express.Router()
 router.use('/sendEmail', emailController)
 router.use('/api', apiRoutes)
 
+let startDate = new Date()
+
 router.get('/', (req, res) => {
   res.json({
-    sane: 'true'
+    sane: 'true',
+	startDate
   })
 })
 
