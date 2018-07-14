@@ -27,6 +27,7 @@
     "pg-hstore": "^2.3.2",
     "pug": "^2.0.3",
     "sequelize": "^4.38.0",
+    "sequelize-values": "^1.1.0",
     "socketcluster-server": "^13.1.2"
   },
   "devDependencies": {}

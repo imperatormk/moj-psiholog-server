@@ -6,19 +6,7 @@ const fs = require('fs')
 const https = require('https')
 const routes = require('./controllers/index.js')
 const bodyParser = require('body-parser')
-
-const Sequelize = require('sequelize')
-const sequelize = new Sequelize('mojpsiholog', 'mojPsiholog', 'pece123!', {
-  host: 'localhost',
-  dialect: 'postgres',
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  operatorsAliases: false
-})
+const db = require('./db/index.js')
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -48,80 +36,36 @@ let socketMap = []
 const users = []
 const sessions = []
 
-const getUser = (userId) => {
-  const userObj = users.find(user => user.id === userId)
-  return userObj
+const getUsers = () => {
+  return db.controllers.users.list()
 }
 
-users.push({
-  id: 1,
-  email: 'imperatormk',
-  password: 'pece123!',
-  type: 'doctor'
-})
+const getUser = (userId) => {
+  return db.controllers.users.listById(userId)
+}
 
-users.push({
-  id: 2,
-  email: 'mrmach',
-  password: 'pece123!',
-  type: 'patient'
-})
+const getUserByCreds = (email, pass) => {
+  return db.controllers.users.listOne({ email, pass })
+}
 
-users.push({
-  id: 3,
-  email: 'damence',
-  password: 'pece123!',
-  type: 'patient'
-})
+const readySessions = []
 
-sessions.push({
-  id: 1,
-  hash: '123456',
-  doctor: getUser(1),
-  patient: getUser(2),
-  ready: false
-})
-
-sessions.push({
-  id: 2,
-  hash: '456789',
-  doctor: getUser(1),
-  patient: getUser(3),
-  ready: true,
-  callState: { // rename
-  	doctorConnected: false,
-  	patientConnected: false,
-  	ongoing: false
-  }
-})
-
-const readySessions = sessions.filter(session => session.ready === true)
-
-app.get('/dbtest', (req, res) => {
-
-const User = sequelize.define('user', {
-  username: Sequelize.STRING,
-  birthday: Sequelize.DATE
-})
-
-sequelize.sync()
-  .then(() => User.create({
-    username: 'janedoe',
-    birthday: new Date(1980, 6, 20)
-  }))
-  .then(jane => {
-    console.log(jane.toJSON())
-	res.json(jane.toJSON())
+getUsers().then((users) => {
+  sessions.push({
+    id: 1,
+    doctor: users.find(user => user.type === 'doctor'),
+    patient: users.find(user => user.id === 56),
+  	hash: '123456',
+    ready: true,
+  	callState: { // rename
+      doctorConnected: false,
+      patientConnected: false,
+      ongoing: false,
+      duration: 0
+    }
   })
-})
 
-app.get('/api/users/:id/sessions', (req, res) => {
-  const userId = parseInt(req.params.id)
-  const session = getReadySession(getUser(userId))
-  session ? res.json({
-  	success: true,
-  	payload: session
-  }) : res.json({ success: false }) // res.json({ status: 'notFound' })
+  readySessions.push(...sessions.filter(session => session.ready === true))
 })
 
 const getReadySession = (user) => {
@@ -129,6 +73,17 @@ const getReadySession = (user) => {
   const patientCondition = (session => session.patient.id === user.id)
   return readySessions.find(user.type === 'doctor' ? doctorCondition : patientCondition)
 }
+
+app.get('/api/users/:id/sessions', (req, res) => {
+  const userId = req.params.id
+  getUser(userId).then((user) => {
+  	const session = getReadySession(user)
+    session ? res.json({
+      success: true,
+      payload: session
+    }) : res.json({ success: false }) // res.json({ status: 'notFound' })
+  })
+})
 
 const addUserToSession = (channel, authToken) => {
   const sessHash = channel.substring(5)
@@ -149,14 +104,14 @@ const userActive = (user) => {
 }
 
 scServer.addMiddleware(scServer.MIDDLEWARE_SUBSCRIBE, (req, next) => {
-  console.log('this is subscribe middleware')
+  // console.log('this is subscribe middleware')
   // scServer.exchange.publish(req.channel, req.socket.authToken)
   next()
 })
 
 scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_IN, (req, next) => {
   if (!req.data.senderId) req.data.senderId = req.socket.id
-  console.log(req.socket.id, 'posted to', req.channel)
+  // console.log(req.socket.id, 'posted to', req.channel)
   next()
 })
 
@@ -165,8 +120,7 @@ scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_OUT, (req, next) => {
   const recipientId = req.socket.id
   const canSend = senderId !== recipientId
     
-  console.log('outbound - can be sent:', canSend, senderId, recipientId)
-
+  // console.log('outbound - can be sent:', canSend, senderId, recipientId)
   if (canSend) {
   	next()
   } else {
@@ -176,10 +130,8 @@ scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_OUT, (req, next) => {
 
 scServer.on('connection', (socket, status) => {
   console.log('new connection', { isAuthenticated: status.isAuthenticated })
-
   socket.on('subscribe', (channel) => {
-  	console.log('subscribed', channel)
-  	
+  	// console.log('subscribed', channel)
   	socketMap.push({
       id: socket.id,
       authToken: socket.authToken,
@@ -192,8 +144,7 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('unsubscribe', (channel) => {
-  	console.log('unsubscribed', channel)
-  
+  	// console.log('unsubscribed', channel)
   	socketMap = socketMap.filter(scObj => scObj.id !== socket.id)
   	removeUserFromSession(channel, socket.authToken)
     scServer.exchange.publish(channel, {
@@ -220,33 +171,34 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('login', (credentials, respond) => {
-  	const user = users.find(user => user.email === credentials.email && user.password === credentials.password)
-  	if (socket.authToken || (user && userActive(user))) {
-	  respond(null, {
-      	success: false,
-      	msg: 'Already logged in...'
-      })
-	  return false
-    }
-  
-    if (user) {
-      socket.setAuthToken({
-        id: user.id,
-        email: user.email,
-        type: user.type
-      })
-      respond(null, {
-      	success: true
-      })
-    } else {
-      respond(null, {
-      	success: false,
-      	msg: 'Invalid credentials'
-      })
-    }
+   	getUserByCreds(credentials.email, credentials.password).then((user) => {
+      if (socket.authToken || (user && userActive(user))) {
+        respond(null, {
+          success: false,
+          msg: 'Already logged in...'
+        })
+        return false
+      }
+    
+      if (user) {
+        socket.setAuthToken({
+          id: user.id,
+          email: user.email,
+          type: user.type
+        })
+        respond(null, {
+          success: true
+        })
+      } else {
+        respond(null, {
+          success: false,
+          msg: 'Invalid credentials'
+        })
+      }
+    })
   })
 
-  socket.on('logout', function(data, respond) {
+  socket.on('logout', (data, respond) => {
 	if (!socket.authToken) {
 	  respond(null, {
       	success: false,

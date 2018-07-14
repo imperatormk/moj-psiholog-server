@@ -3,6 +3,8 @@ var exports = {}
 const nodemailer = require("nodemailer")
 let Email = require('email-templates')
 
+const emailFrom = 'psiholog0@hotmail.com'
+
 var smtpTransport = nodemailer.createTransport({
   host: 'smtp.live.com',
   port: 587,
@@ -10,15 +12,15 @@ var smtpTransport = nodemailer.createTransport({
   secureConnection: true,
   secure: false,
   auth: {
-    user: 'windows_ntuser@hotmail.com',
-    pass: 'jinx'
+    user: emailFrom,
+    pass: 'Psihologo'
   },
   tls: {
     rejectUnauthorized: false
   }
 })
 
-exports.sendEmail = (emailFrom, emailTo) => {
+exports.sendEmail = (emailTo, template, vars) => {
   const email = new Email({
     views: { root: './templates' },
     message: {
@@ -28,16 +30,18 @@ exports.sendEmail = (emailFrom, emailTo) => {
     preview: false,
     transport: smtpTransport
   })
-   
+     
   return email.send({
-    template: 'mars',
+    template,
     message: {
       to: emailTo
     },
-    locals: {
-      name: 'Mrmak'
-    }
+    locals: vars || {}
   })
+	.then((data) => {
+  	  console.log(data)
+  	  return Promise.resolve(data)
+  	})
 }
 
 module.exports = exports
