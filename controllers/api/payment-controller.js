@@ -38,7 +38,6 @@ router.post('/res', (req, res) => {
 
   db.controllers.payments.create(resObj)
 	.then(resp => {
-      console.log(resp)
   	  const sessionData = resp.Session
   
   	  const emailOpts = {

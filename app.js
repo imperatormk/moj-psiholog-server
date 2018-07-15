@@ -7,6 +7,7 @@ const https = require('https')
 const routes = require('./controllers/index.js')
 const bodyParser = require('body-parser')
 const db = require('./db/index.js')
+const sa = require('superagent')
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -84,6 +85,26 @@ app.get('/api/users/:id/sessions', (req, res) => {
     }) : res.json({ success: false }) // res.json({ status: 'notFound' })
   })
 })
+
+// TEMP
+// 
+app.get('/testPayment', (req, res) => {
+  const reqObj = {
+	"paymentData": {
+		"paymentId": "fakeaf",
+		"amount": 420,
+		"status": "completed",
+		"success": true
+	},
+	"sessionData": {
+		"doctorId": 53,
+		"patientId": 56,
+		"datetime": "2016-08-09 04:05:02"
+	}
+  }
+})
+// 
+// TEMP
 
 const addUserToSession = (channel, authToken) => {
   const sessHash = channel.substring(5)

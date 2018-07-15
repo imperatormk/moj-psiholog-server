@@ -21,9 +21,9 @@ module.exports = {
     	  .then(session => payment.setSession(session))
     	  .then(payment => payment.save())
     	  .then(payment => Payment.findOne({ where: { id: payment.id }, include: [{ all: true, nested: true }]}))
-    	  .catch((err) => ({ success: false, err }))
+    	  .catch((err) => ({ err }))
       })
-  	  .catch((err) => ({ success: false, err }))
+  	  .catch((err) => ({ err }))
   },
   list() {
     return Payment.findAll({ include: [{ model: Session }] })

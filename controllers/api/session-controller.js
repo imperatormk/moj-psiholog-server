@@ -8,6 +8,14 @@ router.get('/', (req, res) => {
 	.then(sessions => res.json(sessions))
 })
 
+router.post('/isFirst', (req, res) => {
+  const reqObj = req.body
+  if (!reqObj) res.status(400).send({ msg: 'invalidData' })
+  db.controllers.sessions.checkIsFirst(reqObj)
+	.then(resObj => res.send(resObj))
+	.catch(err => res.status(500).send({ success: false, err }))
+})
+
 router.post('/', (req, res) => {
   const sessionObj = req.body
   if (!sessionObj) {
