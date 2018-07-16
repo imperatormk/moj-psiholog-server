@@ -13,8 +13,6 @@ module.exports = {
     	// sessionData contains: datetime, doctorId, patientId
         const sessionData = {
           ...resData.sessionData,
-          duration: '30 minute', // discussable
-          status: 'pending',
           paymentId: payment.id
         }
     	return SessionController.create(sessionData)

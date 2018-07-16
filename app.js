@@ -202,6 +202,14 @@ scServer.on('connection', (socket, status) => {
       }
     
       if (user) {
+      	if (!user.confirmed) {
+          respond(null, {
+            success: false,
+            msg: 'Please activate your account first...'
+          })
+          return false
+        }
+      
         socket.setAuthToken({
           id: user.id,
           email: user.email,

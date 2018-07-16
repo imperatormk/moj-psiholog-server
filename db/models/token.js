@@ -8,9 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    used: {
+    valid: {
       type: DataTypes.BOOLEAN,
-      default: false,
+      default: true,
     },
   	expiresAfter: {
       type: DataTypes.STRING,

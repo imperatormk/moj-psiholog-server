@@ -18,9 +18,7 @@ router.post('/isFirst', (req, res) => {
 
 router.post('/', (req, res) => {
   const sessionObj = req.body
-  if (!sessionObj) {
-  	res.status(400).send({ msg: 'invalidData' })
-  }
+  if (!sessionObj) res.status(400).send({ msg: 'invalidData' })
 
   db.controllers.sessions.create(sessionObj)
 	.then(resp => {
@@ -37,6 +35,14 @@ router.post('/', (req, res) => {
 	.catch(err => {
   	  res.status(500).send(err)
   	})
+})
+
+router.post('/getByUser', (req, res) => {
+  const userData = req.body
+  if (!userData) res.status(400).send({ success: false, msg: 'invalidData' })
+  db.controllers.sessions.listByUser(userData)
+	.then(resObj => res.status(200).send(resObj))
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 router.delete('/', (req, res) => {

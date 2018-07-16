@@ -23,26 +23,27 @@ router.post('/register', (req, res) => {
       	token: token.value
       }
   	  emailHelper.sendEmail(userObj.email, 'signup', emailOpts)
-       .then(() => { // log this
+        .then(() => { // log this
           console.log('confirmation email sent')
         })
         .catch((err) => { // log this
           console.log('confirmation email not sent')
         })
-	  res.status(resp.status.success ? 200 : 400).send(resp.status)
+  	  const success = resp.success
+	  res.status(success ? 200 : 400).send({ success })
   	})
 	.catch(err => {
-  	  res.status(500).send(err)
+  	  res.status(500).send({ success: false, err })
   	})
 })
-router.get('/confirm/:token', (req, res) => {
-  const token = req.params.token
-  if (!token) res.status(400).send()
 
-  db.controllers.users.confirm(token)
+router.post('/confirm', (req, res) => {
+  const confirmObj = req.body
+  if (!confirmObj) res.status(400).send()
+
+  db.controllers.users.confirm(confirmObj)
 	.then(resObj => {
 	  const success = resObj.success || false
-      
   	  res.status(success ? 200 : 400).send(resObj)
   	})
 	.catch(err => res.status(500).send(err))

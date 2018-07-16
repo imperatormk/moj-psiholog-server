@@ -19,14 +19,13 @@ module.exports = {
     	  .then(token => token.setUser(user))
           .then(token => token.save())
     	  .then(token => ({
-        	status: {
-              success: true
-            },
+        	success: true,
         	data: {
               token,
               user
             }
           }))
+    	  .catch(err => Promise.reject(err))
       })
   	  .catch(err => {
     	if (err.errors[0].type === 'unique violation') {
@@ -38,24 +37,27 @@ module.exports = {
     	return Promise.reject(err)
       })
   },
-  confirm(token) {
-  	return Token.findOne({where: {value: token}, include: [{ model: User }]})
+  confirm(confirmData) {
+  	const token = confirmData.token
+    const password = confirmData.password
+    
+  	return Token.findOne({ where: { value: token }, include: [{ model: User }] })
   	  .then(token => {    
     	if (!token) return Promise.resolve({
           success: false,
           status: 'invalidToken'
         })
     
-    	if (token.used === true) {
+    	if (!token.valid) {
           return Promise.resolve({
           	success: false,
-        	status: 'alreadyUsed'
+        	status: 'invalidToken'
           })
         }
     
-    	return token.update({ used: true })
+    	return token.update({ valid: false })
     	  .then(() => {
-        	return token.User.update({ confirmed: true })
+        	return token.User.update({ pass: password, confirmed: true })
         	  .then(() => ({
             	success: true
               }))

@@ -9,20 +9,26 @@ router.get('/', (req, res) => {
 	.catch(err => res.status(500).send(err))
 })
 
-router.get('/req', (req, res) => {
-  // res.send({ hoho: 'hihi' })
-  res.writeHead(302, {
-    'Location': 'https://thatsmontreal.ca/test.php'
-  })
-  res.end()
-})
-
 router.post('/req', (req, res) => {
-  // res.redirect(307, 'https://thatsmontreal.ca/test.php')
-  res.writeHead(302, {
-    'Location': 'https://thatsmontreal.ca/test.php'
-  })
-  res.end()
+  const sessionData = req.body ? req.body.sessionData : null
+  if (!sessionData) res.status(400).send({ msg: 'invalidData' })
+
+  const isFirstReqData = {
+    doctorId: sessionData.doctorId,
+  	patientId: sessionData.patientId
+  }
+  db.controllers.sessions.checkIsFirst(isFirstReqData)
+  	.then((resObj) => {
+  	  if (resObj.isFirst) {
+      	console.log('first bloood')
+      	db.controllers.sessions.create(sessionData)
+      	  .then(resObj => res.status(200).send({ success: true }))
+      	  .catch(err => res.status(500).send({ success: false, err }))
+      } else {
+      	res.redirect(307, 'https://channelhopper.tv/testReq.php')
+      }
+    })
+    .catch(err => res.status(400).send(err))
 })
 
 router.post('/res', (req, res) => {
