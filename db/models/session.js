@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    isFirst: {
+      type: DataTypes.BOOLEAN,
+      default: false
+    },
     status: {
       type: DataTypes.ENUM('pending', 'canceled', 'ongoing', 'completed'),
       default: 'pending'

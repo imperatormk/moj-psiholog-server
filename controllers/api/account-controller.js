@@ -27,7 +27,7 @@ router.post('/register', (req, res) => {
           console.log('confirmation email sent')
         })
         .catch((err) => { // log this
-          console.log('confirmation email not sent')
+          console.log('confirmation email not sent', err)
         })
   	  const success = resp.success
 	  res.status(success ? 200 : 400).send({ success })
