@@ -1,8 +1,0 @@
-module.exports = {
-  up: (queryInterface, Sequelize) =>
-    queryInterface.changeColumn('Sessions', 'status', {
-      type: Sequelize.ENUM('pending', 'canceled', 'ongoing', 'completed'),
-      defaultValue: 'pending'
-    }),
-  down: (queryInterface /* , Sequelize */) => queryInterface.dropTable('SessionsTokens'),
-};
