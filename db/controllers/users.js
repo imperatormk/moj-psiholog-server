@@ -1,5 +1,6 @@
 const User = require('../models').User
 const Token = require('../models').Token
+const DoctorDetails = require('../models').DoctorDetails
 
 module.exports = {
   create(user) {
@@ -8,6 +9,7 @@ module.exports = {
       pass: user.pass || 'x',
       type: user.type || 'patient'
     }
+    
     return User.create(userObj)
   	  .then(user => {
       	const token = {
@@ -15,19 +17,41 @@ module.exports = {
           value: Math.random().toString(36).slice(-8)
         }
         
-        return Token.create(token, {include: [{ model: User }]})
-    	  .then(token => token.setUser(user))
-          .then(token => token.save())
-    	  .then(token => ({
-        	success: true,
-        	data: {
-              token,
-              user
-            }
-          }))
-    	  .catch(err => Promise.reject(err))
+        let detailsPromise = Promise.resolve({})
+        if (user.type === 'doctor') {
+          const doctorName = userObj.name
+          detailsPromise = DoctorDetails.create({ name: doctorName }, { include: [{ model: User, as: 'doctor' }] })
+        	.then(details => details.setDoctor(user))
+        	.then(details => details.save())
+        	.catch(err => {
+          	  console.log(err)
+          	  return Promise.reject(err)
+          	})
+        }
+        
+    	return detailsPromise.then(() => {
+          return Token.create(token, {include: [{ model: User }]})
+    	  	.then(token => token.setUser(user))
+          	.then(token => token.save())
+    	  	.then(token => ({
+        	  success: true,
+        	  data: {
+              	token,
+              	user
+              }
+          	}))
+    	  	.catch(err => {
+          	  console.log(err)
+          	  return Promise.reject(err)
+          	})
+        })
+    	.catch(err => {
+          console.log(err)
+          return Promise.reject(err)
+        })
       })
   	  .catch(err => {
+    	console.log(err)
     	if (err.errors[0].type === 'unique violation') {
           return Promise.reject({
           	success: false,

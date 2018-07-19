@@ -3,7 +3,12 @@ var exports = {}
 const nodemailer = require("nodemailer")
 let Email = require('email-templates')
 
-const emailFrom = 'psiholog0@hotmail.com'
+const emailFromA = 'psiholog0@hotmail.com'
+const emailFromB = 'psiholozi@outlook.com'
+
+const authA = { user: emailFromA, pass: 'Psihologo' }
+const authB = { user: emailFromB, pass: 'Psiholog' }
+const auth = authB
 
 var smtpTransport = nodemailer.createTransport({
   host: 'smtp.live.com',
@@ -11,10 +16,7 @@ var smtpTransport = nodemailer.createTransport({
   service: "Hotmail",
   secureConnection: true,
   secure: false,
-  auth: {
-    user: emailFrom,
-    pass: 'Psihologo'
-  },
+  auth,
   tls: {
     rejectUnauthorized: false
   }
@@ -24,7 +26,7 @@ exports.sendEmail = (emailTo, template, vars) => {
   const email = new Email({
     views: { root: './templates' },
     message: {
-      from: emailFrom
+      from: emailFromB
     },
     send: true,
     preview: false,
@@ -42,6 +44,7 @@ exports.sendEmail = (emailTo, template, vars) => {
   	  console.log(data)
   	  return Promise.resolve(data)
   	})
+	.catch(err => Promise.reject(err))
 }
 
 module.exports = exports

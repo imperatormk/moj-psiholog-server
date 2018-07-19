@@ -18,7 +18,7 @@ module.exports = {
     	return SessionController.create(sessionData)
     	  .then(session => payment.setSession(session))
     	  .then(payment => payment.save())
-    	  .then(payment => Payment.findOne({ where: { id: payment.id }, include: [{ all: true, nested: true }]}))
+    	  .then(payment => Payment.findOne({ where: { id: payment.id }, include: [{ all: true, nested: true }] }))
     	  .catch((err) => ({ err }))
       })
   	  .catch((err) => ({ err }))
