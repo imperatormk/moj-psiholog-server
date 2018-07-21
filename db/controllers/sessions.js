@@ -2,6 +2,8 @@ const User = require('../models').User
 const Session = require('../models').Session
 const Payment = require('../models').Payment
 
+const moment = require('moment')
+
 module.exports = {
   create(session) {
   	const doctorPromise = User.findOne({ where: { id: session.doctorId }})
@@ -60,15 +62,31 @@ module.exports = {
   list() {
     return Session.findAll({include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }]}) // maybe alias payment?
   },
-  listByUser(userData) {
+  listByUser(userData, readyOnly) {
   	if (!userData) return Promise.reject({ msg: 'invalidData' })
   	return User.findOne({ where: { id: userData.id }})
   	  .then(userRes => {
     	if (!userRes) return Promise.reject({ msg: 'invalidData' })        
         const criteriaObj = userRes.type === 'doctor' ? { doctorId: userRes.id } : { patientId: userRes.id }
-        criteriaObj.status = userData.sessionStatusType
         
+        if (!readyOnly) {
+          criteriaObj.status = userData.sessionStatusType
+        } else {
+          // TODO: add not status === completed
+        }
+        
+    	const now = moment(new Date())
+    	const readyInterval = 100000
     	return Session.findAll({ where: criteriaObj, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }]}) // maybe alias payment?
+    	  .then((sessions) => {
+        	const readySessions = readyOnly ? sessions.find((session) => {
+              const sessionDate = moment(session.datetime)
+              const diff = moment.duration(sessionDate.diff(now)).asMinutes()
+              console.log('diff atm is', diff)
+              return diff <= readyInterval
+            }) : sessions
+            return readySessions
+          })
       })
   },
   deleteAll() {

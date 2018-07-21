@@ -64,8 +64,7 @@ module.exports = {
   confirm(confirmData) {
   	const token = confirmData.token
     const password = confirmData.password
-    
-  	return Token.findOne({ where: { value: token }, include: [{ model: User }] })
+   	return Token.findOne({ where: { value: token }, include: [{ model: User }] })
   	  .then(token => {    
     	if (!token) return Promise.resolve({
           success: false,
