@@ -7,7 +7,8 @@ const https = require('https')
 const routes = require('./controllers/index.js')
 const bodyParser = require('body-parser')
 const db = require('./db/index.js')
-const sa = require('superagent')
+const storage = require('./helpers/storage-helper.js')
+const sa = require('superagent') // remove and uninstall
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -37,37 +38,31 @@ let socketMap = []
 const users = []
 const sessions = []
 
-const getUsers = () => {
-  return db.controllers.users.list()
-}
-
-const getUser = (userId) => {
-  return db.controllers.users.listById(userId)
-}
-
-const getUserByCreds = (email, pass) => {
-  return db.controllers.users.listOne({ email, pass })
-}
+const getUsers = () => { return db.controllers.users.list() }
+const getUser = (userId) => { return db.controllers.users.listById(userId) }
+const getUserByCreds = (email, pass) => { return db.controllers.users.listOne({ email, pass }) }
+const getSessions = () => { return db.controllers.sessions.list() }
 
 const readySessions = []
 
-getUsers().then((users) => {
-  sessions.push({
-    id: 1,
-    doctor: users.find(user => user.type === 'doctor'),
-    patient: users.find(user => user.id === 56),
-  	hash: '123456',
-    ready: true,
-  	callState: { // rename
-      doctorConnected: false,
-      patientConnected: false,
-      ongoing: false,
-      duration: 0
-    }
+Promise.all([getUsers(), getSessions()])
+  .then(res => {
+	const userArr = res[0]
+    const sessionsArr = res[1].map(session => {
+      return {
+      	...session,
+      	ready: true,
+      	callState: {
+      	  doctorConnected: false,
+      	  patientConnected: false,
+      	  ongoing: false,
+      	  duration: 0
+      	}
+      }
+    })
+    sessions.push(...sessionsArr)
+	readySessions.push(...sessions.filter(session => session.ready === true))
   })
-
-  readySessions.push(...sessions.filter(session => session.ready === true))
-})
 
 const getReadySession = (user) => {
   const doctorCondition = (session => session.doctor.id === user.id)
@@ -75,7 +70,7 @@ const getReadySession = (user) => {
   return readySessions.find(user.type === 'doctor' ? doctorCondition : patientCondition)
 }
 
-app.get('/api/users/:id/sessions', (req, res) => {
+app.get('/api/users/:id/sessions', (req, res) => { // remove this
   const userId = req.params.id
   getUser(userId).then((user) => {
   	const session = getReadySession(user)
@@ -86,25 +81,38 @@ app.get('/api/users/:id/sessions', (req, res) => {
   })
 })
 
-// TEMP
-// 
-app.get('/testPayment', (req, res) => {
-  const reqObj = {
-	"paymentData": {
-		"paymentId": "fakeaf",
-		"amount": 420,
-		"status": "completed",
-		"success": true
-	},
-	"sessionData": {
-		"doctorId": 53,
-		"patientId": 56,
-		"datetime": "2016-08-09 04:05:02"
-	}
-  }
+app.get('/api/sessions/prepare/', (req, res) => {
+  const readySessions = db.controllers.sessions.listReady()
+  	.then(sessions => {
+      const resArr = []
+      sessions.forEach(session => {
+      	const sessionObj = {
+          ...session,
+          callState: {
+            doctorConnected: false,
+            patientConnected: false,
+            ongoing: false, // discussable
+            duration: 0
+          }
+        }
+        const resObj = storage.persistSession(sessionObj)
+    	resArr.push(resObj)
+      })
+  	  res.json({ resArr })
+    })
 })
-// 
-// TEMP
+
+app.get('/api/sessions/unprepare/:id', (req, res) => {
+  const id = req.params.id
+  const resObj = storage.popSession(id)
+  res.json({ resObj })
+})
+
+app.get('/api/sessions/listPrepared', (req, res) => {
+  const id = req.params.id
+  const resObj = storage.listSessions()
+  res.json({ resObj })
+})
 
 const addUserToSession = (channel, authToken) => {
   const sessHash = channel.substring(5)

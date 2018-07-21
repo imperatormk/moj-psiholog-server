@@ -6,20 +6,14 @@ const OpenTok = require('opentok'),
 
 exports.createSession = () => {
   return new Promise((resolve, reject) => {
-
     return opentok.createSession((err, session) => {
       if (err) return reject(err)
     
       const sessionId = session.sessionId
-      const token = opentok.generateToken(sessionId)
+      // const token = opentok.generateToken(sessionId)
 
-      const retObj = {
-        apiKey,
-        sessionId,
-        token
-      }
-
-      resolve(retObj)
+      const resObj = { sessionId }
+      resolve(sessionId)
     })
   })
 }

@@ -40,8 +40,16 @@ router.post('/', (req, res) => {
 router.post('/getByUser', (req, res) => {
   const userData = req.body
   if (!userData) res.status(400).send({ success: false, msg: 'invalidData' })
-  db.controllers.sessions.listByUser(userData)
+  db.controllers.sessions.listByUser(userData, false)
 	.then(resObj => res.status(200).send(resObj))
+	.catch(err => res.status(500).send({ success: false, err }))
+})
+
+router.post('/getByUser/ready', (req, res) => {
+  const userData = req.body
+  if (!userData) res.status(400).send({ success: false, msg: 'invalidData' })
+  db.controllers.sessions.listByUser(userData, true)
+	.then(resObj => resObj ? res.status(200).send({ success: true, payload: resObj }) : res.status(200).send({ success: false }))
 	.catch(err => res.status(500).send({ success: false, err }))
 })
 

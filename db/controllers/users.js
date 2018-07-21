@@ -23,10 +23,7 @@ module.exports = {
           detailsPromise = DoctorDetails.create({ name: doctorName }, { include: [{ model: User, as: 'doctor' }] })
         	.then(details => details.setDoctor(user))
         	.then(details => details.save())
-        	.catch(err => {
-          	  console.log(err)
-          	  return Promise.reject(err)
-          	})
+        	.catch(err => Promise.reject(err))
         }
         
     	return detailsPromise.then(() => {
@@ -40,21 +37,13 @@ module.exports = {
               	user
               }
           	}))
-    	  	.catch(err => {
-          	  console.log(err)
-          	  return Promise.reject(err)
-          	})
+    	  	.catch(err => Promise.reject(err))
         })
-    	.catch(err => {
-          console.log(err)
-          return Promise.reject(err)
-        })
+    	.catch(err => Promise.reject(err))
       })
   	  .catch(err => {
-    	console.log(err)
     	if (err.errors[0].type === 'unique violation') {
           return Promise.reject({
-          	success: false,
           	msg: 'accountExists'
           })
         }

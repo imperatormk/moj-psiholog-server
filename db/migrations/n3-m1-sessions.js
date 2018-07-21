@@ -23,6 +23,10 @@ module.exports = {
         type: Sequelize.ENUM('pending', 'canceled', 'ongoing', 'completed'),
         defaultValue: 'pending'
       },
+      sessionKey: {
+      	type: Sequelize.STRING,
+      	allowNull: false
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

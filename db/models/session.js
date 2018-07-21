@@ -15,7 +15,11 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.ENUM('pending', 'canceled', 'ongoing', 'completed'),
       default: 'pending'
-    }
+    },
+  	sessionKey: { // are you sure about that
+  	  type: DataTypes.STRING,
+      allowNull: false
+  	}
   })
   
   Session.associate = (models) => {
