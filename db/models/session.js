@@ -39,6 +39,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: { name: 'paymentId', allowNull: true },
       onDelete: 'SET NULL'
     })
+  
+  	Session.hasOne(models.SessionsMeta, {
+      foreignKey: { name: 'sessionId', allowNull: true },
+      onDelete: 'CASCADE',
+      as: 'meta'
+    })
   }
 
   return Session

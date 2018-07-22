@@ -70,7 +70,6 @@ app.get('/api/sessions/prepare/', (req, res) => {
           callState: {
             doctorConnected: false,
             patientConnected: false,
-            ongoing: false, // discussable
             duration: 0
           }
         }
@@ -126,7 +125,7 @@ scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_IN, (req, next) => {
 scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_OUT, (req, next) => {
   const senderId = req.data.senderId
   const recipientId = req.socket.id
-  const canSend = senderId !== recipientId
+  const canSend = true // senderId !== recipientId // discuss
     
   // console.log('outbound - can be sent:', canSend, senderId, recipientId)
   if (canSend) {
@@ -145,7 +144,7 @@ scServer.on('connection', (socket, status) => {
       authToken: socket.authToken,
     })
   	addOrRemoveUserToSession(channel, socket.authToken, true)
-  	  .then(session => {
+  	  .then(session => {    
     	scServer.exchange.publish(channel, {
           event: 'sessionChange',
           data: session.callState
@@ -179,6 +178,11 @@ scServer.on('connection', (socket, status) => {
       senderId: socket.id,
       event: 'acceptCall' // hmm maybe map these?
     })
+  })
+
+  socket.on('finishSession', (data) => {
+  	const sessionId = data.session.sessionId
+    console.log('finish session', sessionId)
   })
 
   socket.on('login', (credentials, respond) => {

@@ -1,6 +1,7 @@
 const User = require('../models').User
 const Session = require('../models').Session
 const Payment = require('../models').Payment
+const SessionsMeta = require('../models').SessionsMeta
 
 const chatTokenHelper = require('../../helpers/chat-token-helper.js')
 const moment = require('moment')
@@ -68,7 +69,7 @@ module.exports = {
       })
   },
   list() {
-    return Session.findAll({include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }] }) // maybe alias payment?
+    return Session.findAll({include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }, { model: SessionsMeta, as: 'meta' }] }) // maybe alias payment?
   },
   listByStatus(status) {
   	if (!status) return Promise.reject({ msg: 'invalidData' })
