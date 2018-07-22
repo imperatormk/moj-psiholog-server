@@ -1,5 +1,6 @@
 const db = require('../../db')
 const emailHelper = require('../../helpers/email-helper.js')
+const storageHelper = require('../../helpers/storage-helper.js')
 const express = require('express')
 const router = express.Router()
 
@@ -48,9 +49,9 @@ router.post('/getByUser', (req, res) => {
 router.post('/getByUser/ready', (req, res) => {
   const userData = req.body
   if (!userData) res.status(400).send({ success: false, msg: 'invalidData' })
-  db.controllers.sessions.listByUser(userData, true)
-	.then(resObj => resObj ? res.status(200).send({ success: true, payload: resObj }) : res.status(200).send({ success: false }))
-	.catch(err => res.status(500).send({ success: false, err }))
+
+  const readySession = storageHelper.getByUser(userData.id)
+  res.status(200).send({ success: true, found: !!readySession, payload: readySession || null })
 })
 
 router.delete('/', (req, res) => {

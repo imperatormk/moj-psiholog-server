@@ -41,53 +41,24 @@ const sessions = []
 const getUsers = () => { return db.controllers.users.list() }
 const getUser = (userId) => { return db.controllers.users.listById(userId) }
 const getUserByCreds = (email, pass) => { return db.controllers.users.listOne({ email, pass }) }
-const getSessions = () => { return db.controllers.sessions.list() }
+const getReadySessions = () => Promise.resolve(storage.listSessions())
 
-const readySessions = []
-
-Promise.all([getUsers(), getSessions()])
-  .then(res => {
-	const userArr = res[0]
-    const sessionsArr = res[1].map(session => {
-      return {
-      	...session,
-      	ready: true,
-      	callState: {
-      	  doctorConnected: false,
-      	  patientConnected: false,
-      	  ongoing: false,
-      	  duration: 0
-      	}
-      }
-    })
-    sessions.push(...sessionsArr)
-	readySessions.push(...sessions.filter(session => session.ready === true))
-  })
+getUsers().then(res => { users.push(...res) })
 
 const getReadySession = (user) => {
   const doctorCondition = (session => session.doctor.id === user.id)
   const patientCondition = (session => session.patient.id === user.id)
-  return readySessions.find(user.type === 'doctor' ? doctorCondition : patientCondition)
+  return getReadySessions()
+  	.then(sessions => sessions.find(user.type === 'doctor' ? doctorCondition : patientCondition))
 }
 
-app.get('/api/users/:id/sessions', (req, res) => { // remove this
-  const userId = req.params.id
-  getUser(userId).then((user) => {
-  	const session = getReadySession(user)
-    session ? res.json({
-      success: true,
-      payload: session
-    }) : res.json({ success: false }) // res.json({ status: 'notFound' })
-  })
-})
-
 app.get('/api/sessions/prepare/', (req, res) => {
-  const readySessions = db.controllers.sessions.listReady()
+  db.controllers.sessions.listReady()
   	.then(sessions => {
       const resArr = []
       sessions.forEach(session => {
       	const sessionObj = {
-          ...session,
+          ...session.toJSON(),
           callState: {
             doctorConnected: false,
             patientConnected: false,
@@ -98,7 +69,7 @@ app.get('/api/sessions/prepare/', (req, res) => {
         const resObj = storage.persistSession(sessionObj)
     	resArr.push(resObj)
       })
-  	  res.json({ resArr })
+  	  res.json({ success: true, resArr })
     })
 })
 
@@ -110,22 +81,24 @@ app.get('/api/sessions/unprepare/:id', (req, res) => {
 
 app.get('/api/sessions/listPrepared', (req, res) => {
   const id = req.params.id
-  const resObj = storage.listSessions()
-  res.json({ resObj })
+  const resObj = getReadySessions()
+  	.then(sessions => {
+  	  res.json({ sessions })
+    })
 })
 
 const addUserToSession = (channel, authToken) => {
-  const sessHash = channel.substring(5)
+  const sessId = channel.substring(5)
   const userType = authToken.type + 'Connected'
-  readySessions.find(session => session.hash === sessHash).callState[userType] = true
+  getReadySessions().then(sessions => sessions.find(session => session.id === sessId).callState[userType] = true)
 }
 
 // up and down merge into one
 
 const removeUserFromSession = (channel, authToken) => {
-  const sessHash = channel.substring(5)
+  const sessId = channel.substring(5)
   const userType = authToken.type + 'Connected'
-  readySessions.find(session => session.hash === sessHash).callState[userType] = false
+  getReadySessions().then(sessions => sessions.find(session => session.id === sessId).callState[userType] = false)
 }
 
 const userActive = (user) => {
@@ -166,20 +139,27 @@ scServer.on('connection', (socket, status) => {
       authToken: socket.authToken,
     })
   	addUserToSession(channel, socket.authToken)
-  	scServer.exchange.publish(channel, {
-      event: 'sessionChange',
-      data: getReadySession(socket.authToken).callState
-    })
+  
+  	getReadySession(socket.authToken)
+  	  .then(session => {
+        scServer.exchange.publish(channel, {
+          event: 'sessionChange',
+          data: session.callState
+        })
+      })
   })
 
   socket.on('unsubscribe', (channel) => {
   	// console.log('unsubscribed', channel)
   	socketMap = socketMap.filter(scObj => scObj.id !== socket.id)
   	removeUserFromSession(channel, socket.authToken)
-    scServer.exchange.publish(channel, {
-      event: 'sessionChange',
-      data: getReadySession(socket.authToken).callState
-    })
+    getReadySession(socket.authToken)
+  	  .then(session => {
+        scServer.exchange.publish(channel, {
+          event: 'sessionChange',
+          data: session.callState
+        })
+      })
   })
 
   socket.on('callPatient', (data) => {

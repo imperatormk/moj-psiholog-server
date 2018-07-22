@@ -27,7 +27,7 @@ exports.listSessions = () => {
 
 exports.getByUser = (id) => { // gets only one ready session.. enough right?
   const userId = Number(id)
-  return sessionsMeta.find(session => session.doctorId === userId || session.patientId === userId) || null
+  return sessionMeta.find(session => session.doctorId === userId || session.patientId === userId) || null
 }
 
 module.exports = exports

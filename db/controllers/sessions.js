@@ -76,9 +76,10 @@ module.exports = {
   },
   listReady() {
   	const now = moment(new Date())
-    return Session.findAll({ where: { status: 'pending' }, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }], raw: true }) // maybe alias payment?
+    return Session.findAll({ where: { status: 'pending' }, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }] }) // maybe alias payment?
       .then((sessions) => {
         const readySessions = sessions.filter((session) => {
+          console.log('hereeee')
           const sessionDate = moment(session.datetime)
           const diff = moment.duration(sessionDate.diff(now)).asMinutes()
           return diff <= readyInterval
@@ -105,7 +106,7 @@ module.exports = {
         	const readySessions = readyOnly ? sessions.find((session) => {
               const sessionDate = moment(session.datetime)
               const diff = moment.duration(sessionDate.diff(now)).asMinutes()
-              console.log('diff atm is', diff)
+              console.log('diff atm: ', diff)
               return diff <= readyInterval
             }) : sessions
             return readySessions

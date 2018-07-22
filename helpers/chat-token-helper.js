@@ -8,12 +8,18 @@ exports.createSession = () => {
   return new Promise((resolve, reject) => {
     return opentok.createSession((err, session) => {
       if (err) return reject(err)
-    
       const sessionId = session.sessionId
-      // const token = opentok.generateToken(sessionId)
-
-      const resObj = { sessionId }
       resolve(sessionId)
+    })
+  })
+}
+
+exports.createToken = (data) => {
+  return new Promise((resolve, reject) => {
+	const token = opentok.generateToken(data.sessionId)
+    resolve({
+      apiKey,
+      token
     })
   })
 }
