@@ -138,7 +138,6 @@ scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_OUT, (req, next) => {
 scServer.on('connection', (socket, status) => {
   console.log('new connection', { isAuthenticated: status.isAuthenticated })
   socket.on('subscribe', (channel) => {
-  	// console.log('subscribed', channel)
   	socketMap.push({
       id: socket.id,
       authToken: socket.authToken,
@@ -153,7 +152,6 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('unsubscribe', (channel) => {
-  	// console.log('unsubscribed', channel)
   	socketMap = socketMap.filter(scObj => scObj.id !== socket.id)
     addOrRemoveUserToSession(channel, socket.authToken, false)
   	  .then(session => {
@@ -165,24 +163,34 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('callPatient', (data) => {
-  	// socket.exchange.publish('callInvite', data)
-  	// console.log('callPatient', data)
-  	scServer.exchange.publish('sess-' + data.session.id, {
+  	const sessionId = data.session.id
+  	scServer.exchange.publish('sess-' + sessionId, {
       senderId: socket.id,
       event: 'callInvite' // hmm maybe map these?
     })
   })
 
   socket.on('acceptCall', (data) => {
-  	scServer.exchange.publish('sess-' + data.session.id, {
+  	const sessionId = data.session.id
+  	scServer.exchange.publish('sess-' + sessionId, {
       senderId: socket.id,
       event: 'acceptCall' // hmm maybe map these?
     })
   })
 
   socket.on('finishSession', (data) => {
-  	const sessionId = data.session.sessionId
-    console.log('finish session', sessionId)
+  	const meta = {}
+  	const sessionId = data.session.id
+    const sessionData = storage.popSession(sessionId).callState
+        
+    meta.duration = sessionData.duration
+  	db.controllers.sessions.finalize(sessionId, meta)
+  	  .then(() => {
+    	scServer.exchange.publish('sess-' + sessionId, {
+      	  senderId: socket.id, // maybe not needed
+      	  event: 'sessionFinished' // hmm maybe map these?
+    	})
+      })
   })
 
   socket.on('login', (credentials, respond) => {
