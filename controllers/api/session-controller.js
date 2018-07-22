@@ -7,6 +7,7 @@ const router = express.Router()
 router.get('/', (req, res) => {
   db.controllers.sessions.list()
 	.then(sessions => res.json(sessions))
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 router.post('/isFirst', (req, res) => {
@@ -30,12 +31,10 @@ router.post('/', (req, res) => {
       const patient = resp.patient
                   
   	  const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
-      Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err))
+      Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err)) // log this
 	  res.json({ success: true })
   	})
-	.catch(err => {
-  	  res.status(500).send(err)
-  	})
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 router.post('/getByUser', (req, res) => {
@@ -54,11 +53,18 @@ router.post('/getByUser/ready', (req, res) => {
   res.status(200).send({ success: true, found: !!readySession, payload: readySession || null })
 })
 
+router.post('/finalize', (req, res) => {
+  const data = req.body
+  if (!data) res.status(400).send({ success: false, msg: 'invalidData' })
+  db.controllers.sessions.finalize(data.id, data.meta)
+	.then(resp => res.status(200).send({ success: true }))
+	.catch(err => res.status(500).send({ success: false, err }))
+})
+
 router.delete('/', (req, res) => {
   db.controllers.sessions.deleteAll()
-	.then(() => {
-  	  res.json({ success: true })
-  	})
+	.then(resp => res.status(200).send({ success: true }))
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 module.exports = router

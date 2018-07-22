@@ -40,10 +40,7 @@ module.exports = {
     	  .then(session => payment ? session.setPayment(payment) : session)
           .then(session => session.save())
     	  .then(session => Session.find({ where: { id: session.id }, include: includesArr})) // maybe alias payment?
-          .catch(err => {
-        	console.log(err)
-        	return Promise.reject(err)
-          })
+          .catch(err => (Promise.reject(err)))
       })
   	  .catch(err => (Promise.reject(err)))
   },
@@ -80,7 +77,6 @@ module.exports = {
     return Session.findAll({ where: { status: 'pending' }, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }] }) // maybe alias payment?
       .then((sessions) => {
         const readySessions = sessions.filter((session) => {
-          console.log('hereeee')
           const sessionDate = moment(session.datetime)
           const diff = moment.duration(sessionDate.diff(now)).asMinutes()
           return diff <= readyInterval
@@ -112,7 +108,22 @@ module.exports = {
             }) : sessions
             return readySessions
           })
+    	  .catch(err => (Promise.reject(err)))
       })
+  },
+  finalize(sessionId, meta) {
+  	if (!sessionId || !meta) return Promise.reject({ msg: 'invalidData' })
+  	return Session.findOne({ where: { id: sessionId }})
+  	  .then(session => {
+    	if (!session) return Promise.reject({ msg: 'notFound' })
+    	if (session.status !== 'pending' && session.status !== 'ongoing') return Promise.reject({ msg: 'cannotFinalize' })
+    	session.status = 'completed'
+    	return SessionsMeta.create(meta)
+    	  .then(metaObj => session.setMeta(metaObj))
+    	  .then(() => session.save())
+    	  .catch(err => (Promise.reject(err)))
+      })
+  	  .catch(err => (Promise.reject(err)))
   },
   deleteAll() {
   	return Session.destroy({where: {}})
