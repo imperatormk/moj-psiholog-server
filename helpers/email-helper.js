@@ -8,7 +8,7 @@ const emailFromB = 'psiholozi@outlook.com'
 
 const authA = { user: emailFromA, pass: 'Psihologo' }
 const authB = { user: emailFromB, pass: 'Psiholog' }
-const auth = authB
+const auth = authA
 
 var smtpTransport = nodemailer.createTransport({
   host: 'smtp.live.com',
@@ -26,7 +26,7 @@ exports.sendEmail = (emailTo, template, vars) => {
   const email = new Email({
     views: { root: './templates' },
     message: {
-      from: emailFromB
+      from: emailFromA
     },
     send: true,
     preview: false,

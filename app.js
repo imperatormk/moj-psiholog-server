@@ -40,7 +40,7 @@ const sessions = []
 
 const getUsers = () => { return db.controllers.users.list() }
 const getUser = (userId) => { return db.controllers.users.listById(userId) }
-const getUserByCreds = (email, pass) => { return db.controllers.users.listOne({ email, pass }) }
+const getUserByCreds = (email, pass) => { return db.controllers.users.login({ email, pass }) }
 const getReadySessions = () => Promise.resolve(storage.listSessions())
 
 getUsers().then(res => { users.push(...res) })
@@ -194,38 +194,43 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('login', (credentials, respond) => {
-   	getUserByCreds(credentials.email, credentials.password).then((user) => {
-      if (socket.authToken || (user && userActive(user))) {
+   	getUserByCreds(credentials.email, credentials.password)
+    .then((user) => {
+      if (socket.authToken || (userActive(user))) {
         respond(null, {
           success: false,
           msg: 'Already logged in...'
         })
         return false
       }
-    
-      if (user) {
-      	if (!user.confirmed) {
-          respond(null, {
-            success: false,
-            msg: 'Please activate your account first...'
-          })
-          return false
-        }
-      
-        socket.setAuthToken({
-          id: user.id,
-          email: user.email,
-          type: user.type
-        })
-        respond(null, {
-          success: true
-        })
-      } else {
+        
+      if (!user.confirmed) {
         respond(null, {
           success: false,
-          msg: 'Invalid credentials'
+          msg: 'Please activate your account first...'
         })
+        return false
       }
+    
+      socket.setAuthToken({
+        id: user.id,
+        email: user.email,
+        type: user.type
+      })
+      respond(null, {
+        success: true
+      })
+    })
+  	.catch(err => {
+      if (err.msg === 'invalidCreds') {
+      	respond(null, {
+          success: false,
+          msg: err.msg
+        })
+      	return false
+      }
+      respond(err, { success: false, err })
+      return false
     })
   })
 
