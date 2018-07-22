@@ -30,4 +30,9 @@ exports.getByUser = (id) => { // gets only one ready session.. enough right?
   return sessionMeta.find(session => session.doctorId === userId || session.patientId === userId) || null
 }
 
+exports.getById = (id) => {
+  const sessionId = Number(id)
+  return sessionMeta.find(session => session.id === sessionId) || null
+}
+
 module.exports = exports
