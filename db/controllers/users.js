@@ -80,8 +80,11 @@ module.exports = {
         	return bcrypt.hash(plainPass, 10)
               .then((hash) => {
         		return token.User.update({ pass: hash, confirmed: true })
-        	  	  .then(() => ({
-            		success: true
+        	  	  .then((user) => ({
+            		success: true,
+                	data: {
+                      email: user.email
+                    }
               	  }))
            	  })
         	  .catch(err => Promise.reject(err))

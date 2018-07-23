@@ -18,18 +18,18 @@ router.post('/register', (req, res) => {
 	.then(resp => {
   	  const user = resp.data.user
       const token = resp.data.token
+  	  const emailOpts = { token: token.value }
+      const success = resp.success
       
-  	  const emailOpts = {
-      	token: token.value
-      }
-  	  emailHelper.sendEmail(userObj.email, 'signup', emailOpts)
+      if (success && resp.data.user.type === 'patient') { // doctor only?
+  	    emailHelper.sendEmail(userObj.email, 'signup', emailOpts)
         .then(() => { // log this
-          console.log('confirmation email sent')
+          console.log('activation email sent')
         })
         .catch((err) => { // log this
-          console.log('confirmation email not sent', err)
+          console.log('activation email not sent', err)
         })
-  	  const success = resp.success
+      }
 	  res.status(success ? 200 : 400).send({ success })
   	})
 	.catch(err => {
@@ -44,6 +44,17 @@ router.post('/confirm', (req, res) => {
   db.controllers.users.confirm(confirmObj)
 	.then(resObj => {
 	  const success = resObj.success || false
+      const emailOpts = {}
+            
+      if (success) {
+      	emailHelper.sendEmail(resObj.data.email, 'account-confirmed', emailOpts)
+        .then(() => { // log this
+          console.log('confirmation email sent')
+        })
+        .catch((err) => { // log this
+          console.log('confirmation email not sent', err)
+        })
+      }
   	  res.status(success ? 200 : 400).send(resObj)
   	})
 	.catch(err => res.status(500).send(err))
