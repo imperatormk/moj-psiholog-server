@@ -22,7 +22,7 @@ router.post('/register', (req, res) => {
       const success = resp.success
       
       if (success && resp.data.user.type === 'patient') { // doctor only?
-  	    emailHelper.sendEmail(userObj.email, 'signup', emailOpts)
+  	    emailHelper.sendEmail(userObj.email, 'signup-patient', emailOpts)
         .then(() => { // log this
           console.log('activation email sent')
         })
