@@ -3,6 +3,7 @@ const sessions = require('./sessions')
 const payments = require('./payments')
 const tokens = require('./tokens')
 const doctors = require('./doctors')
+const blogs = require('./blogs')
 
 module.exports = {
   users,
@@ -10,4 +11,5 @@ module.exports = {
   payments,
   tokens,
   doctors,
+  blogs,
 }
