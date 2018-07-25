@@ -15,10 +15,11 @@ module.exports = {
   },
   list() {
   	return Blog.findAll({ include: [{ model: User, as: 'poster' }] })
-  	  .catch(err => (Promise.reject(err)))
+  },
+  listById(blogId) {
+    return Blog.findOne({ where: { id: blogId }, include: [{ model: User, as: 'poster' }] })
   },
   deleteAll() {
   	return Blog.destroy({where: {}})
-  	  .catch(err => (Promise.reject(err)))
   }
 }

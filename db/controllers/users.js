@@ -118,4 +118,4 @@ module.exports = {
   deleteAll() {
   	return User.destroy({where: {}})
   }
-};
+}

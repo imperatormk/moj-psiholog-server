@@ -18,6 +18,13 @@ module.exports = (sequelize, DataTypes) => {
       default: false,
     },
   })
+  
+  User.hook('beforeFind', (options) => { // might be revisited
+  	if (!options.attributes) {
+      options.attributes = {}
+  	}
+  	options.attributes.exclude = ['pass']
+  })
 
   return User
 }

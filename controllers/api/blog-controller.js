@@ -8,6 +8,13 @@ router.get('/', (req, res) => {
 	.catch(err => res.status(500).send(err))
 })
 
+router.get('/:id', (req, res) => {
+  const blogId = Number(req.params.id)
+  db.controllers.blogs.listById(blogId)
+	.then(blog => res.json(blog))
+	.catch(err => res.status(500).send(err))
+})
+
 router.post('/', (req, res) => {
   const blogObj = req.body.blog
   const userId = req.body.userId
@@ -18,7 +25,7 @@ router.post('/', (req, res) => {
 
   db.controllers.blogs.create(blogObj, userId)
 	.then((resp) => {
-  	  res.status(200).send({ success: true, data: resp })
+  	  res.status(201).send({ success: true, data: resp })
   	})
 	.catch(err => {
   	  res.status(500).send({ success: false, err })
