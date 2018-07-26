@@ -59,8 +59,10 @@ module.exports = {
   	.catch(err => Promise.reject(err))
   },
   confirm(confirmData) {
+  	if (!confirmData) return Promise.reject({ msg: 'invalidData' })
   	const token = confirmData.token
     const plainPass = confirmData.password
+    if (!token || !plainPass) return Promise.reject({ msg: 'invalidData' })
     
    	return Token.findOne({ where: { value: token }, include: [{ model: User }] })
   	  .then(token => {    
@@ -94,8 +96,10 @@ module.exports = {
       })
   },
   login(authData) {
+  	if (!authData) return Promise.reject({ msg: 'invalidData' })
   	const email = authData.email
     const plainPass = authData.pass
+    if (!email || !plainPass) return Promise.reject({ msg: 'invalidData' })
     
     return User.find({ where: { email } })
   	  .then((user) => {
@@ -105,7 +109,47 @@ module.exports = {
         	if (valid) return Promise.resolve(user)
         	return Promise.reject({ msg: 'invalidCreds' })
 		  })
+    	  .catch(err => Promise.reject(err))
       })
+  	  .catch(err => Promise.reject(err))
+  },
+  changePassword(reqData) {
+  	if (!reqData) return Promise.reject({ msg: 'invalidData' })
+  	const email = reqData.email
+    const passData = reqData.passData
+    
+    if (!email || !passData) return Promise.reject({ msg: 'invalidData' })
+  	const currentPass = passData.current
+    const newA = passData.newA ? passData.newA.trim() : null
+    const newB = passData.newB ? passData.newB.trim() : null
+    
+    if (!currentPass || !newA || !newB) return Promise.reject({ msg: 'invalidData' })
+  	if (newA !== newB) return Promise.reject({ msg: 'newPasswordMismatch' })
+  	if (currentPass === newB) return Promise.reject({ msg: 'oldEqualsNew' }) // for Bubu
+  
+  	return User.find({ where: { email } })
+  	  .then((user) => {
+    	if (!user) return Promise.reject({ msg: 'invalidEmail' })
+    	return bcrypt.compare(currentPass, user.pass)
+          .then((valid) => {
+        	if (valid) {
+           	  return bcrypt.hash(newA, 10) // for Aschwa
+                .then((hash) => {
+              	  return user.update({ pass: hash })
+                  	.then(user => ({
+                      data: { // not sufe if needed
+                        email: user.email
+                      }
+                    }))
+              		.catch(err => Promise.reject(err))
+               	})
+            	.catch(err => Promise.reject(err))
+            }
+        	return Promise.reject({ msg: 'invalidPassword' })
+		  })
+    	  .catch(err => Promise.reject(err))
+      })
+  	  .catch(err => Promise.reject(err))
   },
   list() {
     return User.findAll({})

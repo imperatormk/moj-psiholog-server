@@ -39,7 +39,7 @@ router.post('/register', (req, res) => {
 
 router.post('/confirm', (req, res) => {
   const confirmObj = req.body
-  if (!confirmObj) res.status(400).send()
+  if (!confirmObj) res.status(400).send({ msg: 'invalidData' })
 
   db.controllers.users.confirm(confirmObj)
 	.then(resObj => {
@@ -60,11 +60,18 @@ router.post('/confirm', (req, res) => {
 	.catch(err => res.status(500).send(err))
 })
 
+router.post('/change-password', (req, res) => { // maybe use this for reset too
+  const reqObj = req.body
+  if (!reqObj) res.status(400).send({ msg: 'invalidData' })
+
+  db.controllers.users.changePassword(reqObj)
+	.then(resp => res.status(200).send({ success: true }))
+    .catch(err => res.status(500).send(err))
+})
+
 router.delete('/', (req, res) => {
   db.controllers.users.deleteAll()
-	.then(() => {
-  	  res.json({ success: true })
-  	})
+	.then(() => res.json({ success: true }))
 })
 
 module.exports = router
