@@ -18,7 +18,7 @@ module.exports = {
   	return Blog.findAll({ include: [{ model: User, as: 'poster' }] })
   },
   listById(blogId) {
-    return Blog.findOne({ where: { id: blogId }, include: [{ model: User, as: 'poster', include: [{ model: Blog, as: 'blogs', attributes: ['id'] }, { model: DoctorDetails, as: 'details', attributes: ['bio', 'avatar'] }] }] })
+    return Blog.findOne({ where: { id: blogId }, include: [{ model: User, as: 'poster', include: [{ model: Blog, as: 'blogs', attributes: ['id'] }, { model: DoctorDetails, as: 'details', attributes: ['bio', 'avatar', 'name'] }] }] })
   },
   listByDocId(doctorId) {
   	return Blog.findAll({ where: { posterId: doctorId } })
