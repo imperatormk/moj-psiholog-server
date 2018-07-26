@@ -15,9 +15,17 @@ module.exports = {
         type: Sequelize.STRING,
         defaultValue: '',
       },
+      price: {
+      	type: Sequelize.INTEGER,
+      	defaultValue: -1
+      },
       bio: {
         type: Sequelize.TEXT,
         defaultValue: '',
+      },
+      ready: {
+      	type: Sequelize.BOOLEAN,
+      	defaultValue: false
       },
       createdAt: {
         allowNull: false,

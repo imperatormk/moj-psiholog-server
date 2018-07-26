@@ -1,4 +1,5 @@
 const User = require('../models').User
+const Blog = require('../models').Blog
 const DoctorDetails = require('../models').DoctorDetails
 
 module.exports = {
@@ -6,7 +7,7 @@ module.exports = {
     return DoctorDetails.findAll({ include: [{ model: User, as: 'doctor' }] })
   },
   listById(doctorId) {
-    return DoctorDetails.findOne({ where: { doctorId }, include: [{ model: User, as: 'doctor' }] }) // #1 same A
+    return DoctorDetails.findOne({ where: { doctorId }, attributes: ['doctorId', 'name', 'avatar', 'bio', 'price', 'ready'], include: [{ model: User, as: 'doctor', include: [{ model: Blog, as: 'blogs', attributes: ['id'] }] }] }) // #1 same A
   },
   listOne(config) {
   	const configObj = { ...config }

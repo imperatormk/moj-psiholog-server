@@ -19,9 +19,7 @@ router.get('/:id', (req, res) => {
       if (!doctor) res.status(404).send({ success: false })
   	  res.json(doctor)
   	})
-	.catch(err => {
-  	  res.status(500).send({ success: false, err })
-  	})
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 router.put('/:id', (req, res) => {

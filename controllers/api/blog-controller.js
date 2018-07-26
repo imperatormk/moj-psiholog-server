@@ -32,6 +32,18 @@ router.post('/', (req, res) => {
   	})
 })
 
+router.post('/custom', (req, res) => { // semi-temp idk
+  const doctorId = Number(req.body.doctorId)
+  if (!doctorId) res.status(400).send({ msg: 'invalidData' })
+  db.controllers.blogs.listByDocId(doctorId)
+	.then((resp) => {
+  	  res.status(200).send({ success: true, data: resp })
+    })
+	.catch(err => {
+  	  res.status(500).send({ success: false, err })
+  	})
+})
+
 router.delete('/', (req, res) => {
   db.controllers.blogs.deleteAll()
 	.then(resp => res.status(200).send({ success: true }))

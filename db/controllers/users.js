@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const User = require('../models').User
 const Token = require('../models').Token
 const DoctorDetails = require('../models').DoctorDetails
+const Blog = require('../models').Blog
 
 module.exports = {
   create(user) {
@@ -110,7 +111,7 @@ module.exports = {
     return User.findAll({})
   },
   listById(id) {
-    return User.find({ where: { id } })
+    return User.find({ include: [{ model: Blog, as: 'blogs' }], where: { id } })
   },
   listOne(config) {
     return User.find({ where: config })

@@ -19,11 +19,18 @@ module.exports = (sequelize, DataTypes) => {
     },
   })
   
-  User.hook('beforeFind', (options) => { // might be revisited
-  	if (!options.attributes) {
-      options.attributes = {}
-  	}
-  	options.attributes.exclude = ['pass']
+  User.associate = (models => {
+  	User.hasMany(models.Blog, {
+      foreignKey: { name: 'posterId' },
+      onDelete: 'SET NULL',
+      as: 'blogs'
+    })
+  
+    User.hasOne(models.DoctorDetails, {
+      foreignKey: { name: 'doctorId' },
+      onDelete: 'CASCADE',
+      as: 'details'
+    })
   })
 
   return User

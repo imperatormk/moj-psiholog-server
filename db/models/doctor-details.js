@@ -8,9 +8,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       default: ''
     },
+    price: {
+      type: DataTypes.INTEGER,
+      default: -1
+    },
     bio: {
       type: DataTypes.TEXT,
       default: ''
+    },
+    ready: {
+      type: DataTypes.BOOLEAN,
+      default: false
     }
   })
   
