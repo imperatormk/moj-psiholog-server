@@ -1,4 +1,5 @@
 const User = require('../models').User
+const DoctorDetails = require('../models').DoctorDetails
 const Session = require('../models').Session
 const Payment = require('../models').Payment
 const SessionsMeta = require('../models').SessionsMeta
@@ -34,7 +35,7 @@ module.exports = {
     
     	session.sessionKey = sessionKey || null
         
-        return Session.create(session, {include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }]})
+        return Session.create(session, {include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }] })
           .then(session => session.setDoctor(doctor))
           .then(session => session.setPatient(patient))
     	  .then(session => payment ? session.setPayment(payment) : session)
@@ -68,13 +69,10 @@ module.exports = {
   list() {
     return Session.findAll({include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }, { model: SessionsMeta, as: 'meta' }] }) // maybe alias payment?
   },
-  listByStatus(status) {
-  	if (!status) return Promise.reject({ msg: 'invalidData' })
-  	return Session.findAll({ where: { status }, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }] }) // maybe alias payment?
-  },
-  listReady() {
+  listReady() { // hopefully used for preparing the sessions only?
   	const now = moment(new Date())
-    return Session.findAll({ where: { status: 'pending' }, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }] }) // maybe alias payment?
+    return Session.findAll({ where: { status: 'pending' }, 
+             include: [{ model: User, as: 'doctor', include: [{ model: DoctorDetails, as: 'details' }] }, { model: User, as: 'patient' }, { model: Payment, attributes: ['id', 'amount'] }] })
       .then((sessions) => {
         const readySessions = sessions.filter((session) => {
           const sessionDate = moment(session.datetime)
@@ -84,6 +82,12 @@ module.exports = {
         return readySessions
       })
   },
+  listByStatus(status) {
+  	if (!status) return Promise.reject({ msg: 'invalidData' })
+  	const includes = [{ model: User, as: 'doctor', include: [{ model: DoctorDetails, as: 'details' }] }, { model: User, as: 'patient' }, { model: Payment, attributes: ['id', 'amount'] }]
+    if (status === 'completed') includes.push({ model: SessionsMeta, as: 'meta' })
+  	return Session.findAll({ where: { status }, include: includes }) // maybe alias payment?
+  },
   listByUser(userData, readyOnly) {
   	if (!userData) return Promise.reject({ msg: 'invalidData' })
   	return User.findOne({ where: { id: userData.id }})
@@ -91,14 +95,19 @@ module.exports = {
     	if (!userRes) return Promise.reject({ msg: 'invalidData' })        
         const criteriaObj = userRes.type === 'doctor' ? { doctorId: userRes.id } : { patientId: userRes.id }
         
+        let includesArr = [{ model: User, as: 'doctor', include: [{ model: DoctorDetails, as: 'details' }] }, { model: User, as: 'patient' }, { model: Payment, attributes: ['id', 'amount'] }]
         if (!readyOnly) {
           criteriaObj.status = userData.sessionStatusType
+          if (userData.sessionStatusType === 'completed') {
+          	includesArr.push({ model: SessionsMeta, as: 'meta' })
+          }
         } else {
+          includesArr.push({ model: SessionsMeta, as: 'meta' })
           // TODO: add not status === completed
         }
         
     	const now = moment(new Date())
-    	return Session.findAll({ where: criteriaObj, include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }]}) // maybe alias payment?
+    	return Session.findAll({ where: criteriaObj, include: includesArr })
     	  .then((sessions) => {
         	const readySessions = readyOnly ? sessions.find((session) => {
               const sessionDate = moment(session.datetime)
