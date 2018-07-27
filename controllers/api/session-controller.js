@@ -1,7 +1,9 @@
 const db = require('../../db')
 const emailHelper = require('../../helpers/email-helper.js')
 const storageHelper = require('../../helpers/storage-helper.js')
+const scheduleHelper = require('../../helpers/schedule-helper.js')
 const express = require('express')
+const moment = require('moment')
 const router = express.Router()
 
 router.get('/', (req, res) => {
@@ -29,10 +31,14 @@ router.post('/', (req, res) => {
   	  }
   	  const doctor = resp.doctor
       const patient = resp.patient
-                  
-  	  const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
+      
+      const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
       Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err)) // log this
-	  res.json({ success: true })
+      
+      const scheduledTime = moment(resp.datetime).subtract(10, 'minutes').format('HH:mm YYYY-MM-DD')
+      return scheduleHelper.scheduleTask(scheduledTime, resp.id)
+		.then(resp => res.json({ success: true })) // log just in case - for ref
+		.catch(err => res.status(500).send({ success: false, err })) // log this
   	})
 	.catch(err => res.status(500).send({ success: false, err }))
 })
@@ -59,6 +65,35 @@ router.post('/finalize', (req, res) => {
   db.controllers.sessions.finalize(data.id, data.meta)
 	.then(resp => res.status(200).send({ success: true }))
 	.catch(err => res.status(500).send({ success: false, err }))
+})
+
+router.post('/:id/schedule', (req, res) => { // a bit odd endpoint name for sure ;)
+  const id = Number(req.params.id)
+  const scheduledTime = req.body.scheduledTime ? req.body.scheduledTime.trim() : null
+  if (!scheduledTime) res.status(400).send({ msg: 'invalidData' })
+  scheduleHelper.scheduleTask(scheduledTime, id)
+	.then(resp => res.json(resp))
+	.catch(err => res.status(500).send(err))
+})
+
+router.get('/:id/prepare', (req, res) => {
+  const id = Number(req.params.id)
+
+  db.controllers.sessions.listById(id)
+  	.then(session => {
+      if (!session) res.status(404).send()
+      const sessionObj = {
+        ...session.toJSON(),
+        callState: {
+          doctorConnected: false,
+          patientConnected: false,
+          duration: 0
+        }
+      }
+      const resObj = storageHelper.persistSession(sessionObj, true)
+  	  if (resObj) res.json({ success: true })
+  	  res.status(500).send({ msg: 'failed' })
+   })
 })
 
 router.delete('/', (req, res) => {

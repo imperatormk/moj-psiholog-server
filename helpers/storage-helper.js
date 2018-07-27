@@ -1,14 +1,17 @@
 var exports = {}
 let sessionMeta = []
 
-exports.persistSession = (session) => {
+exports.persistSession = (session, isNew) => {
   const index = sessionMeta.findIndex(sessionObj => session.id === sessionObj.id)
-  if (index < 0) {
+  let valid = true
+  if (index < 0 && isNew) {
   	sessionMeta.push(session)
-  } else {
+  } else if (index >= 0 && !isNew) {
     sessionMeta[index] = session
+  } else {
+  	valid = false
   }
-  return session
+  return valid ? session : null
 }
 
 exports.popSession = (id) => {

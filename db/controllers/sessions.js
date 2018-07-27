@@ -69,6 +69,10 @@ module.exports = {
   list() {
     return Session.findAll({include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }, { model: SessionsMeta, as: 'meta' }] }) // maybe alias payment?
   },
+  listById(id) {
+    const sessionId = Number(id)
+  	return Session.findOne({ where: { id: sessionId }})
+  },
   listReady() { // hopefully used for preparing the sessions only?
   	const now = moment(new Date())
     return Session.findAll({ where: { status: 'pending' }, 

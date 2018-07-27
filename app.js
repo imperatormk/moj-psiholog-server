@@ -7,8 +7,11 @@ const https = require('https')
 const routes = require('./controllers/index.js')
 const bodyParser = require('body-parser')
 const db = require('./db/index.js')
-const storage = require('./helpers/storage-helper.js')
+const storageHelper = require('./helpers/storage-helper.js')
+const scheduleHelper = require('./helpers/schedule-helper.js')
 const sa = require('superagent') // remove and uninstall
+
+const moment = require('moment')
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
@@ -41,7 +44,7 @@ const sessions = []
 const getUsers = () => { return db.controllers.users.list() }
 const getUser = (userId) => { return db.controllers.users.listById(userId) }
 const getUserByCreds = (email, pass) => { return db.controllers.users.login({ email, pass }) }
-const getReadySessions = () => Promise.resolve(storage.listSessions())
+const getReadySessions = () => Promise.resolve(storageHelper.listSessions())
 
 getUsers().then(res => { users.push(...res) })
 
@@ -54,13 +57,13 @@ const getReadySession = (user) => {
 
 const getSessionById = (id) => {
   return new Promise((resolve, reject) => {
-  	const session = storage.getById(id)
+  	const session = storageHelper.getById(id)
     if (session) resolve(session)
   	reject({ msg: 'notFound' })
   })
 }
 
-app.get('/api/sessions/prepare/', (req, res) => {
+app.get('/api/sessions/prepare/', (req, res) => { // for removal
   db.controllers.sessions.listReady()
   	.then(sessions => {
       const resArr = []
@@ -73,8 +76,8 @@ app.get('/api/sessions/prepare/', (req, res) => {
             duration: 0
           }
         }
-        const resObj = storage.persistSession(sessionObj)
-    	resArr.push(resObj)
+        const resObj = storageHelper.persistSession(sessionObj, true)
+    	if (resObj) resArr.push(resObj)
       })
   	  res.json({ success: true, resArr })
     })
@@ -82,7 +85,7 @@ app.get('/api/sessions/prepare/', (req, res) => {
 
 app.get('/api/sessions/unprepare/:id', (req, res) => {
   const id = req.params.id
-  const resObj = storage.popSession(id)
+  const resObj = storageHelper.popSession(id)
   res.json({ resObj })
 })
 
@@ -100,7 +103,7 @@ const addOrRemoveUserToSession = (channel, authToken, isAdd) => {
     const userType = authToken.type + 'Connected'
     getSessionById(sessId).then(session => {
       session.callState[userType] = isAdd
-      const res = storage.persistSession(session)
+      const res = storageHelper.persistSession(session, false)
       resolve(res)
     })
   })
@@ -181,7 +184,7 @@ scServer.on('connection', (socket, status) => {
   socket.on('finishSession', (data) => {
   	const meta = {}
   	const sessionId = data.session.id
-    const sessionData = storage.popSession(sessionId).callState
+    const sessionData = storageHelper.popSession(sessionId).callState
         
     meta.duration = sessionData.duration
   	db.controllers.sessions.finalize(sessionId, meta)
@@ -250,5 +253,9 @@ scServer.on('connection', (socket, status) => {
 })
 
 httpsServer.listen(3002, () => {
+  const dateA = '2018-07-26T10:10:00.000Z'
+  const dateB = moment(dateA).utc().format('MM/DD/YYYY HH:mm')
+  
+  console.log(dateB)
   console.log('Example app listening on port 3002! Go to https://localhost:3002/')
 })
