@@ -5,6 +5,7 @@ const Payment = require('../models').Payment
 const SessionsMeta = require('../models').SessionsMeta
 
 const chatTokenHelper = require('../../helpers/chat-token-helper.js')
+const scheduleHelper = require('../../helpers/schedule-helper.js')
 const moment = require('moment')
 
 const readyInterval = 100000 // as minutes
@@ -35,13 +36,21 @@ module.exports = {
     
     	session.sessionKey = sessionKey || null
         
-        return Session.create(session, {include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }] })
+        const sessionPromise = Session.create(session, {include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }] })
           .then(session => session.setDoctor(doctor))
           .then(session => session.setPatient(patient))
     	  .then(session => payment ? session.setPayment(payment) : session)
           .then(session => session.save())
     	  .then(session => Session.find({ where: { id: session.id }, include: includesArr})) // maybe alias payment?
           .catch(err => (Promise.reject(err)))
+        
+        return sessionPromise.then(sessResp => {
+          const scheduledTime = moment(sessResp.datetime).utc().subtract(10, 'minutes').format('HH:mm YYYY-MM-DD')
+      	  return scheduleHelper.scheduleTask(scheduledTime, sessResp.id)
+			.then(resp => sessResp) // log just in case - for ref
+			.catch(err => (Promise.reject(err)))
+        })
+    	.catch(err => (Promise.reject(err)))
       })
   	  .catch(err => (Promise.reject(err)))
   },

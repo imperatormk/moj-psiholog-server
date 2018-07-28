@@ -2,7 +2,7 @@ const User = require('../models').User
 const Session = require('../models').Session
 const Payment = require('../models').Payment
 
-const SessionController = require('./sessions.js')
+const sessionController = require('./sessions.js')
 
 module.exports = {
   create(resData) {
@@ -15,7 +15,7 @@ module.exports = {
           ...resData.sessionData,
           paymentId: payment.id
         }
-    	return SessionController.create(sessionData)
+    	return sessionController.create(sessionData)
     	  .then(session => payment.setSession(session))
     	  .then(payment => payment.save())
     	  .then(payment => Payment.findOne({ where: { id: payment.id }, include: [{ all: true, nested: true }] }))

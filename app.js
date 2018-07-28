@@ -119,7 +119,6 @@ scServer.addMiddleware(scServer.MIDDLEWARE_PUBLISH_OUT, (req, next) => {
 })
 
 scServer.on('connection', (socket, status) => {
-  console.log('new connection', { isAuthenticated: status.isAuthenticated })
   socket.on('subscribe', (channel) => {
   	socketMap.push({
       id: socket.id,
@@ -143,6 +142,17 @@ scServer.on('connection', (socket, status) => {
           data: session.callState
         })
       })
+  })
+
+  socket.on('hasReady', (data, respond) => {
+  	if (!(socket.authToken && socket.authToken.id)) {
+      respond(null, { hasReady: false }) // hah
+      return false
+    }
+  
+  	const userId = socket.authToken.id
+    const hasReady = !!storageHelper.getByUser(userId)
+    respond(null, { hasReady })
   })
 
   socket.on('callPatient', (data) => {
@@ -177,7 +187,7 @@ scServer.on('connection', (socket, status) => {
   })
 
   socket.on('login', (credentials, respond) => {
-   	getUserByCreds(credentials.email, credentials.password)
+   getUserByCreds(credentials.email, credentials.password)
     .then((user) => {
       if (socket.authToken || (userActive(user))) {
         respond(null, {

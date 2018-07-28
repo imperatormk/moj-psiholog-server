@@ -24,6 +24,11 @@ exports.popSession = (id) => {
   return null
 }
 
+exports.popAll = () => {
+  sessionMeta = []
+  return true
+}
+
 exports.listSessions = () => {
   return sessionMeta
 }

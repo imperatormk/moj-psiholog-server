@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../../db')
 const emailHelper = require('../../helpers/email-helper.js')
+const sa = require('superagent')
 
 router.get('/', (req, res) => {
   db.controllers.payments.list()
@@ -20,9 +21,11 @@ router.post('/req', (req, res) => {
   db.controllers.sessions.checkIsFirst(isFirstReqData)
   	.then((resObj) => {
   	  if (resObj.isFirst) {
-      	console.log('first bloood')
       	db.controllers.sessions.create(sessionData)
-      	  .then(resObj => res.status(200).send({ success: true }))
+      	  .then(resObj => {
+        	sendMailAfterCreated(resObj)
+        	res.status(200).send({ success: true })
+          })
       	  .catch(err => res.status(500).send({ success: false, err }))
       } else {
       	res.redirect(307, 'https://channelhopper.tv/testReq.php')
@@ -45,19 +48,27 @@ router.post('/res', (req, res) => {
   db.controllers.payments.create(resObj)
 	.then(resp => {
   	  const sessionData = resp.Session
-  
-  	  const emailOpts = {
-		sessionId: sessionData.id
-  	  }
-  	  const doctor = sessionData.doctor
-      const patient = sessionData.patient
-                  
-  	  const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
-      Promise.all(mailerPromises).then(respEmail => console.log('new sessions emails sent')).catch(err => console.log(err))
+	  sendMailAfterCreated(sessionData)
 	  res.json({ success: true })
     })
 	.catch(err => res.status(500).send({ success: false, err }))
 })
+
+const sendMailAfterCreated = (sessionData) => {
+  const emailOpts = {
+	sessionId: sessionData.id
+  }
+  const doctor = sessionData.doctor
+  const patient = sessionData.patient
+  
+  emailHelper.sendEmail(doctor.email, 'new-session', emailOpts)
+	.then(() => {
+  	  emailHelper.sendEmail(patient.email, 'new-session', emailOpts)
+  		.then(() => console.log('new sessions emails sent'))
+  		.catch(err => console.log(err))
+  	})
+	.catch(err => console.log(err))
+}
 
 router.delete('/', (req, res) => {
   db.controllers.payments.deleteAll()

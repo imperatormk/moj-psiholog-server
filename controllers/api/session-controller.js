@@ -32,13 +32,13 @@ router.post('/', (req, res) => {
   	  const doctor = resp.doctor
       const patient = resp.patient
       
-      const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
-      Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err)) // log this
-      
-      const scheduledTime = moment(resp.datetime).subtract(10, 'minutes').format('HH:mm YYYY-MM-DD')
-      return scheduleHelper.scheduleTask(scheduledTime, resp.id)
-		.then(resp => res.json({ success: true })) // log just in case - for ref
-		.catch(err => res.status(500).send({ success: false, err })) // log this
+      const emailEnabled = false
+      if (emailEnabled) {
+      	const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
+      	Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err)) // log this
+      }
+  
+  	  res.json({ success: true })
   	})
 	.catch(err => res.status(500).send({ success: false, err }))
 })
@@ -82,23 +82,33 @@ router.get('/:id/prepare', (req, res) => {
   db.controllers.sessions.listById(id)
   	.then(session => {
       if (!session) res.status(404).send()
-      const sessionObj = {
-        ...session.toJSON(),
-        callState: {
-          doctorConnected: false,
-          patientConnected: false,
-          duration: 0
+  
+  	  // is this the best place?
+  	  session.update({ status: 'ongoing' }).then(() => {
+        const sessionObj = {
+          ...session.toJSON(),
+          callState: {
+            doctorConnected: false,
+            patientConnected: false,
+            duration: 0
+          }
         }
-      }
-      const resObj = storageHelper.persistSession(sessionObj, true)
-  	  if (resObj) res.json({ success: true })
-  	  res.status(500).send({ msg: 'failed' })
-   })
+                   
+        const resObj = storageHelper.persistSession(sessionObj, true)
+        if (resObj) res.json({ success: true })
+        res.status(500).send({ msg: 'failed' })
+  	  })
+	  .catch(err => res.status(500).send({ success: false, err }))
+	})
+	.catch(err => res.status(500).send({ success: false, err }))
 })
 
 router.delete('/', (req, res) => {
   db.controllers.sessions.deleteAll()
-	.then(resp => res.status(200).send({ success: true }))
+	.then(resp => {
+  	  storageHelper.popAll()
+  	  res.status(200).send({ success: true })
+    })
 	.catch(err => res.status(500).send({ success: false, err }))
 })
 

@@ -26,7 +26,7 @@ exports.sendEmail = (emailTo, template, vars) => {
   const email = new Email({
     views: { root: './templates' },
     message: {
-      from: emailFromA
+      from: auth.user
     },
     send: true,
     preview: false,
@@ -41,7 +41,6 @@ exports.sendEmail = (emailTo, template, vars) => {
     locals: vars || {}
   })
 	.then((data) => {
-  	  console.log(data)
   	  return Promise.resolve(data)
   	})
 	.catch(err => Promise.reject(err))
