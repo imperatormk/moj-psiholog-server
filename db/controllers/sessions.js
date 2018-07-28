@@ -71,7 +71,7 @@ module.exports = {
   },
   listById(id) {
     const sessionId = Number(id)
-  	return Session.findOne({ where: { id: sessionId }})
+  	return Session.findOne({ where: { id: sessionId }, include: [{ model: User, as: 'doctor', include: [{ model: DoctorDetails, as: 'details' }] }, { model: User, as: 'patient' }, { model: Payment, attributes: ['id', 'amount'] }] })
   },
   listReady() { // hopefully used for preparing the sessions only?
   	const now = moment(new Date())

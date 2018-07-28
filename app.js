@@ -63,26 +63,6 @@ const getSessionById = (id) => {
   })
 }
 
-app.get('/api/sessions/prepare/', (req, res) => { // for removal
-  db.controllers.sessions.listReady()
-  	.then(sessions => {
-      const resArr = []
-      sessions.forEach(session => {
-      	const sessionObj = {
-          ...session.toJSON(),
-          callState: {
-            doctorConnected: false,
-            patientConnected: false,
-            duration: 0
-          }
-        }
-        const resObj = storageHelper.persistSession(sessionObj, true)
-    	if (resObj) resArr.push(resObj)
-      })
-  	  res.json({ success: true, resArr })
-    })
-})
-
 app.get('/api/sessions/unprepare/:id', (req, res) => {
   const id = req.params.id
   const resObj = storageHelper.popSession(id)
