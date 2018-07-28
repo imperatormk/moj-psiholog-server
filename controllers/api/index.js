@@ -5,6 +5,7 @@ const paymentController = require('./payment-controller.js')
 const tokenController = require('./token-controller.js')
 const doctorController = require('./doctor-controller.js')
 const blogController = require('./blog-controller.js')
+const personalityTestController = require('./personality-test-controller.js')
 
 const express = require('express')
 const router = express.Router()
@@ -16,5 +17,6 @@ router.use('/payments', paymentController)
 router.use('/tokens', tokenController)
 router.use('/doctors', doctorController)
 router.use('/blogs', blogController)
+router.use('/tests', personalityTestController)
 
 module.exports = router

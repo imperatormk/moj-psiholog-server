@@ -192,7 +192,7 @@ scServer.on('connection', (socket, status) => {
       if (socket.authToken || (userActive(user))) {
         respond(null, {
           success: false,
-          msg: 'Already logged in...'
+          msg: 'alreadyLoggedIn'
         })
         return false
       }
@@ -200,7 +200,7 @@ scServer.on('connection', (socket, status) => {
       if (!user.confirmed) {
         respond(null, {
           success: false,
-          msg: 'Please activate your account first...'
+          msg: 'activateFirst'
         })
         return false
       }
@@ -215,10 +215,10 @@ scServer.on('connection', (socket, status) => {
       })
     })
   	.catch(err => {
-      if (err.msg === 'invalidCreds') {
+      if (err.msg === 'invalidCreds') { // a bit of a workaround
       	respond(null, {
           success: false,
-          msg: err.msg
+          msg: 'invalidCreds'
         })
       	return false
       }
@@ -243,9 +243,5 @@ scServer.on('connection', (socket, status) => {
 })
 
 httpsServer.listen(3002, () => {
-  const dateA = '2018-07-26T10:10:00.000Z'
-  const dateB = moment(dateA).utc().format('MM/DD/YYYY HH:mm')
-  
-  console.log(dateB)
-  console.log('Example app listening on port 3002! Go to https://localhost:3002/')
+  console.log('App listening on port 3002! Go to https://localhost:3002/')
 })

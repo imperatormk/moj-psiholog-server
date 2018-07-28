@@ -1,0 +1,52 @@
+{
+  "questions": [{
+  	"id": 1,
+    "title": "How are you feeling",
+    "answers": [{
+      "title": "good",
+      "points": 3
+    }, {
+      "title": "bad",
+      "points": 1
+    }, {
+      "title": "very good",
+      "points": 5
+    }]
+  }, {
+  	"id": 2,
+    "title": "How  were you feeling yesterday",
+    "answers": [{
+      "title": "good",
+      "points": 3
+    }, {
+      "title": "bad",
+      "points": 1
+    }, {
+      "title": "very good",
+      "points": 5
+    }]
+  }, {
+  	"id": 3,
+    "title": "How was your day",
+    "answers": [{
+      "title": "good",
+      "points": 3
+    }, {
+      "title": "bad",
+      "points": 1
+    }, {
+      "title": "very good",
+      "points": 5
+    }]
+  }],
+  "criteria": [{
+    "from": 5,
+    "result": "a"
+  }, {
+    "from": 10,
+    "result": "b"
+  },{
+    "from": 15,
+    "result": "c"
+  }]
+}
