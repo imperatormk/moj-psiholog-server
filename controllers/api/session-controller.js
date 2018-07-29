@@ -26,7 +26,10 @@ router.post('/', (req, res) => {
 
   db.controllers.sessions.create(sessionObj)
 	.then(resp => {
-  	  const emailOpts = {
+  	  const emailOptsDoctor = {
+		sessionId: resp.id
+  	  }
+      const emailOptsPatient = {
 		sessionId: resp.id
   	  }
   	  const doctor = resp.doctor
@@ -34,7 +37,7 @@ router.post('/', (req, res) => {
       
       const emailEnabled = false
       if (emailEnabled) {
-      	const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOpts), emailHelper.sendEmail(patient.email, 'new-session', emailOpts)]
+      	const mailerPromises = [emailHelper.sendEmail(doctor.email, 'new-session', emailOptsDoctor), emailHelper.sendEmail(patient.email, 'new-session', emailOptsPatient)]
       	Promise.all(mailerPromises).then(resp => console.log(resp)).catch(err => console.log(err)) // log this
       }
   

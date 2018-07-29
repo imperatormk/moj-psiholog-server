@@ -86,6 +86,7 @@ module.exports = {
         	  	  .then((user) => ({
             		success: true,
                 	data: {
+                      type: user.type,
                       email: user.email
                     }
               	  }))

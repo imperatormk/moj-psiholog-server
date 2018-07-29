@@ -55,9 +55,10 @@ router.post('/confirm', (req, res) => {
 	.then(resObj => {
 	  const success = resObj.success || false
       const emailOpts = {}
+      const userObj = resObj.data
             
-      if (success) {
-      	emailHelper.sendEmail(resObj.data.email, 'account-confirmed', emailOpts)
+      if (success && userObj.type === 'patient') { // for now
+      	emailHelper.sendEmail(userObj.email, 'account-confirmed', emailOpts)
         .then(() => { // log this
           console.log('confirmation email sent')
         })

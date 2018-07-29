@@ -55,15 +55,25 @@ router.post('/res', (req, res) => {
 })
 
 const sendMailAfterCreated = (sessionData) => {
-  const emailOpts = {
-	sessionId: sessionData.id
-  }
   const doctor = sessionData.doctor
   const patient = sessionData.patient
+  const payment = sessionData.Payment || {}
   
-  emailHelper.sendEmail(doctor.email, 'new-session', emailOpts)
+  const emailOptsPatient = {
+	sessionId: sessionData.id,
+  	doctor: doctor.name,
+  	price: payment.amount || 'Free session',
+  	datetime: sessionData.datetime,
+  }
+  const emailOptsDoctor = {
+	sessionId: sessionData.id,
+  	email: patient.email,
+  	datetime: sessionData.datetime,
+  }
+  
+  emailHelper.sendEmail(doctor.email, 'new-session-doctor', emailOptsDoctor)
 	.then(() => {
-  	  emailHelper.sendEmail(patient.email, 'new-session', emailOpts)
+  	  emailHelper.sendEmail(patient.email, 'new-session-patient', emailOptsPatient)
   		.then(() => console.log('new sessions emails sent'))
   		.catch(err => console.log(err))
   	})
