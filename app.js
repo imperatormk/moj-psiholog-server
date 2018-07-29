@@ -83,8 +83,20 @@ const addOrRemoveUserToSession = (channel, authToken, isAdd) => {
     const userType = authToken.type + 'Connected'
     getSessionById(sessId).then(session => {
       session.callState[userType] = isAdd
-      const res = storageHelper.persistSession(session, false)
-      resolve(res)
+      resolve(storageHelper.persistSession(session, false))
+    })
+  })
+}
+
+const acceptCall = (sessId) => {
+  return new Promise(resolve => {
+    getSessionById(sessId).then(session => {
+      if (!session.callState.startDate) {
+      	session.callState.startDate = moment().utc()
+        resolve(storageHelper.persistSession(session, false))
+      	return
+      }
+      resolve()
     })
   })
 }
@@ -155,6 +167,16 @@ scServer.on('connection', (socket, status) => {
     respond(null, { hasReady })
   })
 
+  socket.on('submitTest', (data, respond) => { // implement
+  	if (!(socket.authToken && socket.authToken.id)) {
+      respond(null, { success: false, msg: 'notAuth' }) // hah
+      return false
+    }
+  
+  	const userId = socket.authToken.id
+    respond(null, { success: 'true' })
+  })
+
   socket.on('callPatient', (data) => {
   	const sessionId = data.session.id
   	scServer.exchange.publish('sess-' + sessionId, {
@@ -165,18 +187,26 @@ scServer.on('connection', (socket, status) => {
 
   socket.on('acceptCall', (data) => {
   	const sessionId = data.session.id
-  	scServer.exchange.publish('sess-' + sessionId, {
-      senderId: socket.id,
-      event: 'acceptCall' // hmm maybe map these?
-    })
+    acceptCall(sessionId)
+  	  .then(() => {
+  		scServer.exchange.publish('sess-' + sessionId, {
+      	  senderId: socket.id,
+      	  event: 'acceptCall' // hmm maybe map these?
+    	})
+   	  })
   })
 
   socket.on('finishSession', (data) => {
   	const meta = {}
   	const sessionId = data.session.id
     const sessionData = storageHelper.popSession(sessionId).callState
+    
+    const startDate = sessionData.startDate
+    const currentDate = moment().utc()
+    const duration = moment.duration(moment(currentDate).diff(moment(startDate)))
+    const durationAsSeconds = Math.abs(Math.round(duration.asSeconds()))
         
-    meta.duration = sessionData.duration
+    meta.duration = durationAsSeconds
   	db.controllers.sessions.finalize(sessionId, meta)
   	  .then(() => {
     	scServer.exchange.publish('sess-' + sessionId, {
@@ -184,6 +214,7 @@ scServer.on('connection', (socket, status) => {
       	  event: 'sessionFinished' // hmm maybe map these?
     	})
       })
+  	  .catch(err => console.log(err))
   })
 
   socket.on('login', (credentials, respond) => {

@@ -84,18 +84,22 @@ router.get('/:id/prepare', (req, res) => {
       if (!session) res.status(404).send()
   
   	  // is this the best place?
-  	  session.update({ status: 'ongoing' }).then(() => {
+  	  session.update({ status: 'ongoing' })
+      .then(() => {
         const sessionObj = {
           ...session.toJSON(),
           callState: {
             doctorConnected: false,
             patientConnected: false,
-            duration: 0
+        	startDate: null
           }
         }
                    
         const resObj = storageHelper.persistSession(sessionObj, true)
-        if (resObj) res.json({ success: true })
+        if (resObj) {
+          res.json({ success: true })
+          return
+        }
         res.status(500).send({ msg: 'failed' })
   	  })
 	  .catch(err => res.status(500).send({ success: false, err }))
