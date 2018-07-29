@@ -174,7 +174,13 @@ scServer.on('connection', (socket, status) => {
     }
   
   	const userId = socket.authToken.id
-    respond(null, { success: 'true' })
+    db.controllers.tests.create(userId, data)
+  	  .then((res) => {
+    	respond(null, { success: true, data: res })
+      })
+  	  .catch(err => {
+    	respond(null, { success: false, err })
+      })
   })
 
   socket.on('callPatient', (data) => {

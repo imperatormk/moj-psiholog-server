@@ -11,7 +11,7 @@ module.exports = {
     	if (res) return Promise.reject({ msg: 'alreadyDone' })
         try {
           const answersObj = JSON.parse(JSON.stringify(testData))
-          const dataObj = { answers: answersObj, criteriaResult: { points: 9, result: 'b' } }
+          const dataObj = { answers: answersObj, criteriaResult: { points: 9, result: 'You might be a bit depressed but nothing too bad' } }
           const testObj = { userId, data: dataObj }
           
           return Test.create(testObj)
