@@ -21,8 +21,18 @@ router.post('/register', (req, res) => {
   	  const emailOpts = { token: token.value }
       const success = resp.success
       
-      if (success && resp.data.user.type === 'patient') { // doctor only?
-  	    emailHelper.sendEmail(userObj.email, 'signup-patient', emailOpts)
+      const isPatient = resp.data.user.type === 'patient'
+      const isDoctor = resp.data.user.type === 'doctor'
+      let templateType = ''
+      
+      if (isPatient) {
+      	templateType = 'signup-patient'
+      } else if (isDoctor) {
+      	templateType = 'signup-doctor'
+      }
+      
+      if (success && templateType) {
+  	    emailHelper.sendEmail(userObj.email, templateType, emailOpts)
         .then(() => { // log this
           console.log('activation email sent')
         })
