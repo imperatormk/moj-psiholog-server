@@ -4,6 +4,7 @@ const payments = require('./payments')
 const tokens = require('./tokens')
 const doctors = require('./doctors')
 const blogs = require('./blogs')
+const tests = require('./tests')
 
 module.exports = {
   users,
@@ -12,4 +13,5 @@ module.exports = {
   tokens,
   doctors,
   blogs,
+  tests,
 }
