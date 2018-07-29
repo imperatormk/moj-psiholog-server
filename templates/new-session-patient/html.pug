@@ -1,0 +1,44 @@
+head
+  link(rel="stylesheet", href="/css/main.css", data-inline)
+  link(rel="stylesheet", href="/css/bootstrap.css", data-inline)
+  style(type="text/css").
+    .row p {
+      margin:0 0 0px!important;
+      padding:5px;
+    }
+.container-fluid(style='width:100%;padding:0px')
+  .row(style='margin:0px')
+    .text-center.col-lg-12.col-md-12.col-xl-12.col-xs-12.col-sm-12(style='padding:0px')
+      img(src='https://image.ibb.co/hq9yuJ/ready.jpg', width='100%', style='padding:0px')
+  .text-center(style='margin-top:3%')
+    h4 Here are the details:
+    hr(style='background-color: skyblue; height: 2px; border: 0;')
+    div
+      .row(style='background-color:skyblue;color:white;vertical-align:middle')
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p Psychiatrist
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p  #{doctor}
+      hr(style='margin:0px')
+      .row(style='background-color:skyblue;color:white;vertical-align:middle')
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p  Time and date
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p  #{datetime} 
+      hr(style='margin:0px')
+      .row(style='background-color:skyblue;color:white;vertical-align:middle')
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p  Price
+        .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
+          p  #{price} 
+    a.btn.btn-info(href='https://smeni.mk:8080/profile' type="button" style="margin-top:3%") View the session
+  footer.footer.text-center(style='background-color:skyblue;padding:40px;margin-top:5%')
+    div(style='margin-top:-6px')
+      p(style='float:left;color:white;margin-bottom:0px') &copy; Moj psiholog 2018
+      div(style='float:right;')
+        a(href='http://facebook.com/mrmachovskimartin')
+          i.fa.fa-facebook(aria-hidden='true') &nbsp;
+        a(href='http://twitter.com/delamrmach')
+          i.fa.fa-twitter(aria-hidden='true') &nbsp;
+        a(href='http://googleplus.com/')
+          i.fa.fa-google(aria-hidden='true') &nbsp;
