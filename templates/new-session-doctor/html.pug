@@ -25,8 +25,14 @@ head
           p Time
         .col-md-6.col-xs-6.col-sm-6.col-lg-6.col-xl-6
           p #{datetime}
-    p(style='margin-top:3%') This person has already done the personallity test.
-    button.btn.btn-info.btn-lg(type='button') Check the results
+    if hasDoneTest == true
+      div
+        p(style='margin-top:3%') This person has already done the personallity test. (#{testId})
+        button.btn.btn-info.btn-lg(type='button') Check the results
+    else
+      div
+        p(style='margin-top:3%') This person has not done the personallity test yet.
+        button.btn.btn-info.btn-lg(type='button') Send a request
   footer.footer.text-center(style='background-color:skyblue;padding:40px;margin-top:5%')
     div(style='margin-top:-6px')
       p(style='float:left;color:white;margin-bottom:0px') &copy; Moj psiholog 2018

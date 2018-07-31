@@ -61,7 +61,7 @@ const sendMailAfterCreated = (sessionData) => {
   const doctor = sessionData.doctor
   const patient = sessionData.patient
   const payment = sessionData.Payment || {}
-    
+
   const emailOptsPatient = {
 	sessionId: sessionData.id,
   	doctor: doctor.details.name,
@@ -74,11 +74,22 @@ const sendMailAfterCreated = (sessionData) => {
   	datetime: sessionData.datetime,
   }
   
-  emailHelper.sendEmail(doctor.email, 'new-session-doctor', emailOptsDoctor)
-	.then(() => {
-  	  emailHelper.sendEmail(patient.email, 'new-session-patient', emailOptsPatient)
-  		.then(() => console.log('new sessions emails sent'))
-  		.catch(err => console.log(err))
+  db.controllers.tests.getByUser(patient.id)
+	.then((res) => {
+  	  if (res) {
+      	emailOptsDoctor.hasDoneTest = true
+      	emailOptsDoctor.testId = res.id
+      } else {
+      	emailOptsDoctor.hasDoneTest = false
+      }
+  
+  	  emailHelper.sendEmail(doctor.email, 'new-session-doctor', emailOptsDoctor)
+        .then(() => {
+            emailHelper.sendEmail(patient.email, 'new-session-patient', emailOptsPatient)
+            .then(() => console.log('new sessions emails sent'))
+            .catch(err => console.log(err))
+          })
+        .catch(err => console.log(err))
   	})
 	.catch(err => console.log(err))
 }
