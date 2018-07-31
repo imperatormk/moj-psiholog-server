@@ -1,3 +1,4 @@
+const Sequelize = require('sequelize')
 const User = require('../models').User
 const Session = require('../models').Session
 const Payment = require('../models').Payment
@@ -25,6 +26,18 @@ module.exports = {
   },
   list() {
     return Payment.findAll({ include: [{ model: Session }] })
+  },
+  listByPeriod(period) {
+  	const periodArr = ['day', 'week', 'month', 'quarter', 'year']
+    const periodNo = Number(period)
+    
+    if (!Number.isInteger(periodNo)) return Promise.reject({ msg: 'invalidParam' })
+    if (periodNo >= periodArr.length) return Promise.reject({ msg: 'invalidParam' })
+  
+  	const periodItem = periodArr[periodNo]
+  	return Payment.findAll({
+  	  group: [Sequelize.fn('date_trunc', periodItem, Sequelize.col('createdAt'))]
+	})
   },
   deleteAll() {
   	return Payment.destroy({ where: {} })

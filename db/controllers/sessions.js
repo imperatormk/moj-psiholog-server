@@ -12,7 +12,7 @@ const readyInterval = 100000 // as minutes
 
 module.exports = {
   create(session) {
-  	const doctorPromise = User.findOne({ where: { id: session.doctorId }})
+  	const doctorPromise = User.findOne({ where: { id: session.doctorId }, include: [{ model: DoctorDetails, as: 'details' }] })
     const patientPromise = User.findOne({ where: { id: session.patientId }})
     const paymentPromise = session.paymentId ? Payment.find({ where: { id: session.paymentId }}) : Promise.resolve(null)
     const sessionKeyPromise = chatTokenHelper.createSession()
@@ -36,7 +36,7 @@ module.exports = {
     
     	session.sessionKey = sessionKey || null
         
-        const sessionPromise = Session.create(session, {include: [{ model: User, as: 'doctor' }, { model: User, as: 'patient' }, { model: Payment }] })
+        const sessionPromise = Session.create(session, {include: [{ model: User, as: 'doctor', include: [{ model: DoctorDetails, as: 'details' }] }, { model: User, as: 'patient' }, { model: Payment }] })
           .then(session => session.setDoctor(doctor))
           .then(session => session.setPatient(patient))
     	  .then(session => payment ? session.setPayment(payment) : session)

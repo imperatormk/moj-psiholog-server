@@ -5,7 +5,10 @@ const emailHelper = require('../../helpers/email-helper.js')
 const sa = require('superagent')
 
 router.get('/', (req, res) => {
-  db.controllers.payments.list()
+  const period = req.query.period
+  let promiseFn = period == null ? db.controllers.payments.list() : db.controllers.payments.listByPeriod(period)
+  
+  promiseFn
 	.then(payments => res.json(payments))
 	.catch(err => res.status(500).send(err))
 })
@@ -58,10 +61,10 @@ const sendMailAfterCreated = (sessionData) => {
   const doctor = sessionData.doctor
   const patient = sessionData.patient
   const payment = sessionData.Payment || {}
-  
+    
   const emailOptsPatient = {
 	sessionId: sessionData.id,
-  	doctor: doctor.name,
+  	doctor: doctor.details.name,
   	price: payment.amount || 'Free session',
   	datetime: sessionData.datetime,
   }
