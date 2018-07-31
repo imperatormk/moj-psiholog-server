@@ -1,6 +1,7 @@
 var exports = {}
 var exec = require('child_process').exec
 var spawn = require('child_process').spawn
+var epipebomb = require('epipebomb')()
 
 const getSessionApiUrl = (id) => `https://smeni.mk:3002/api/sessions/${id}/prepare`
 const logFileUrl = '/var/www/log.txt'
@@ -11,7 +12,7 @@ const spawnInstance = (scheduledTime, sessionId) => {
     return new Promise((resolve, reject) => {
       c.stdout.on('data', d => resolve({ msg: String(d || 'empty stdout.\n') }))
       c.stderr.once('data', d => resolve({ msg: String(d || 'empty stderr.\n') }))
-      c.stdin.write(`wget --no-check-certificate -O /dev/null '${getSessionApiUrl(sessionId)}' 2>> ${logFileUrl}`)
+      c.stdin.write(`wget --no-check-certificate -O /dev/null '${getSessionApiUrl(sessionId)}' 2>> ${logFileUrl}`, (res) => {})
       c.stdin.end(`\n`)
     })
   }
